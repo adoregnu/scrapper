@@ -46,7 +46,6 @@ class Dmm(scrapy.Spider, Common):
             il.add_css('thumb', '#sample-video > div.tx10.pd-3 > a::attr(href)')
             il.add_xpath('title', '//meta[@property="og:title"]/@content')
             il.add_xpath('actor', '//*[@id="performer"]/a/text()')
-            #self.add_selector_en(il)
             lang[response.meta['lang']](il)
             il.add_value('id', self.keyword)
             return il.load_item()
@@ -65,22 +64,21 @@ class Dmm(scrapy.Spider, Common):
         prog = re.compile(r'cid=(\w+)/')
         cids = [prog.search(url).group(1) for url in results]
         if len(set(cids)) != 1:
-            self.log('found more then 1 movies({}) from keyword:()', cids, self.keyword)
+            self.log('found more then 1 movies({}) from keyword:({})'.format(cids, self.keyword))
             return
 
-        ppm = [s for s in results if 'ppm/video' in s]
-        if len(ppm):
-            yield scrapy.Request(url = ppm[0],
+        for ppm in [s for s in results if 'ppm/video' in s]:
+            return scrapy.Request(url = ppm[0],
                 callback = self.parse_search_page,
                 cookies = self.cookies['www.dmm.co.jp'],
                 meta = {'lang':'en'}
             )
-        else:
-            digital = [s for s in results if 'digital/videoa' in s]
-            import copy
+
+        import copy
+        for digital in [s for s in results if 'digital/videoa' in s]:
             cookie = copy.deepcopy(self.cookies['www.dmm.co.jp'])
             cookie[0]['value'] = 'ja'
-            yield scrapy.Request(url = digital[0],
+            return scrapy.Request(url = digital[0],
                 callback = self.parse_search_page,
                 cookies = cookie,
                 meta = {'lang':'ja'}

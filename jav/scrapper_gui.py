@@ -78,7 +78,7 @@ class ScrapperGui(QMainWindow):
         self.scrapToolbar = self.addToolBar('Scrapper')
         self.sites = QComboBox()
         site = self.scrapperConf.get('site', 'javlibrary')
-        sites = ['javlibrary', 'avwiki', 'dmm', 'r18', 'mgstage']
+        sites = ['javlibrary', 'avwiki', 'dmm', 'r18', 'mgstage', 'actionjav']
         self.sites.insertItems(1, sites)
         self.sites.setCurrentText(site)
         self.sites.currentTextChanged.connect(self.setSite)
@@ -90,7 +90,7 @@ class ScrapperGui(QMainWindow):
         #filemenu.addToolBar()
 
         action = QAction('Rename files', self)
-        action.triggered.connect(self.cw.fileView.renameFiles)
+        action.triggered.connect(self.cw.fileView.fileRenameTool)
         filemenu.addAction(action)
 
 if __name__ == '__main__':

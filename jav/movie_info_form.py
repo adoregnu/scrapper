@@ -55,8 +55,7 @@ class MovieInfoModel(QAbstractItemModel):
     def setData(self, index, value, role=Qt.EditRole):
         if not index.isValid():
             return
-        #print('setData! row:{}, col:{}, val:{}, item:{}'.format(
-        #    index.row(), index.column(), value, index.internalPointer()))
+
         key = self.index2key[index.column()]
         if key == 'genre':
             item = self.movieInfo.get(key)
@@ -64,7 +63,6 @@ class MovieInfoModel(QAbstractItemModel):
                 item.append(value.split(';')[-1])
             else:
                 self.movieInfo[key] = value.split(';')
-            #print(item)
         elif key == 'actor':
             item = self.movieInfo.get(key)
             if isinstance(item, dict):
@@ -76,7 +74,6 @@ class MovieInfoModel(QAbstractItemModel):
             else:
                 self.movieInfo[key] = {'name':value}
                 item = self.movieInfo[key]
-            print(item)
         elif isinstance(value, str) and len(value) > 0:
             self.movieInfo[key] = value
         return True

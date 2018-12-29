@@ -59,28 +59,10 @@ class FolderView(QListView):
         else:
             self.changeDir('/'.join(tmp[0:-1]))
 
-    def renameFiles(self):
-        import re
-        exts = ('*.mp4', '*.mkv', '*.avi', '*.wmv', '*.smi', '*.srt')
-        files = []
-        for ext in exts:
-            files.extend(glob.glob('%s/%s'%(self.config['currdir'], ext)))
-
-        idCountProg = re.compile(r'(\w+-\d+(?:[\-\d]{2}|\w)?)')
-        idNoCountProg = re.compile(r'(\w+-\d+)')
-        for file in files:
-            ext = file.split('.')[-1]
-            m = idCountProg.search(os.path.basename(file))
-            if not m: continue
-            idCount = m.group(0).upper()
-            m = idNoCountProg.search(idCount)
-            idNoCount = m.group(0)
-            #print('mkdir %s/%s'%(os.path.dirname(file), idNoCount))
-            os.makedirs('%s/%s'%(os.path.dirname(file), idNoCount), exist_ok = True)
-            new = '{0}/{1}/{2}.{3}'.format(os.path.dirname(file), idNoCount, idCount, ext)
-            #print('move %s -> %s'%(file, new))
-            os.rename(file, new)
+    def fileRenameTool(self):
+        from rename_tool import FileRenameDialog
+        dlg = FileRenameDialog(self.config.get('currdir', ''), self)
+        dlg.exec_()
 
     def absolutePath(self, index):
         return self.model.fileInfo(index).absoluteFilePath()
-

@@ -75,26 +75,39 @@ class PipelineCommon(object):
             if item.get(k) and isinstance(item[k], list) and len(item[k]) == 1:
                 item[k] = item[k][0]
 
+    def adjust_actor(self, name):
+        from .actor_map import ACTOR_MAP
+        if ACTOR_MAP.get(name):
+            return ACTOR_MAP[name]
+        else:
+            return name
+
     def append_element(self, key, data):
-        if key == 'genre' and data:
+        if key == 'actor_thumb':
+            pass
+        elif key == 'genre' and data:
             for genre in data:
                 SubElement(self.root, key).text = genre
         elif key == 'actor' and data:
             if isinstance(data, str):
                 elm = SubElement(self.root, key)
-                SubElement(elm, 'name').text = data
+                SubElement(elm, 'name').text = self.adjust_actor(data)
             if isinstance(data, dict):
                 elm = SubElement(self.root, key)
                 for k, v in data.items():
-                    SubElement(elm, k).text = v
+                    if isinstance(v, list):
+                        for name in v:
+                            SubElement(elm, k).text = self.adjust_actor(name)
+                    else:
+                        SubElement(elm, k).text = self.adjust_actor(v)
             if isinstance(data, list):
                 for item in data:
                     elm = SubElement(self.root, key)
                     if isinstance(item, dict):
                         for k, v in item.items():
-                            SubElement(elm, k).text = v
+                            SubElement(elm, k).text = self.adjust_actor(v)
                     else:
-                        SubElement(elm, 'name').text = item
+                        SubElement(elm, 'name').text = self.adjust_actor(item)
         elif isinstance(data, str):
             if key == 'date':
                 SubElement(self.root, 'year').text = data.split('-')[0]
@@ -125,11 +138,11 @@ class PipelineCommon(object):
         fname = '%s/%s' % (outdir, os.path.basename(url))
         return self.download_file(url, fname)
 
-    def crop_image_left(self, path, ratio=0.475):
+    def crop_image_left(self, path, ratio=0.474):
         ext = path.split('.')[-1]
         im = Image.open(path)
         w, h = im.size
-        cim = im.crop((w - w*ratio, 0, w, h))
+        cim = im.crop((w - int(w*ratio), 0, w, h))
         poster = '%s/%s-poster.%s'%(self.out_path, self.keyword, ext)
         cim.save(poster)
         return poster

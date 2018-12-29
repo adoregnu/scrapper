@@ -30,5 +30,6 @@ class PipelineJavlib(PipelineCommon):
         self.filter(item, 'rating', self.digit)
 
         self.list2str(item)
+        item['title'] = item['title'].replace(item['id'], '').strip()
         return item
 
