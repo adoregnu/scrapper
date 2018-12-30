@@ -7,7 +7,7 @@ class PipelineJavlib(PipelineCommon):
 
     def parse_actors(self, html):
         from bs4 import BeautifulSoup
-        html = BeautifulSoup(html[0], 'html.parser')
+        html = BeautifulSoup(str(html[0]), 'html.parser')
         actors = []
         for cast in html.select('.cast'):
             actor = {}
@@ -25,11 +25,12 @@ class PipelineJavlib(PipelineCommon):
         return actors
 
     def process_item(self, item, spider):
-        self.filter(item, 'actor', self.parse_actors)
+        self.item = item
+        self.filter('actor', self.parse_actors)
         item['thumb'] = 'http:%s'%item['thumb'][0]
-        self.filter(item, 'rating', self.digit)
+        self.filter('rating', self.digit)
 
-        self.list2str(item)
+        self.list2str()
         item['title'] = item['title'].replace(item['id'], '').strip()
         return item
 

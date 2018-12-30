@@ -9,25 +9,26 @@ class PipelineR18(PipelineCommon):
     def __init__(self, crawler):
         super().__init__(crawler)
 
-    def check_full_set_name(self, item):
-        if not 'set' in item: return None
+    def check_full_set_name(self):
+        if not 'set' in self.item: return None
 
         from bs4 import BeautifulSoup
-        html = BeautifulSoup(item['set'], 'html.parser')
+        html = BeautifulSoup(str(self.item['set']), 'html.parser')
         setname = html.a.text.strip()
         if not setname.endswith('...'):
-            item['set'] = setname
+            self.item['set'] = setname
             return
 
         return scrapy.Request(url=html.a['href'], cookies = self.cookies)
 
-    def return_item(self, response, item):
-        item['set'] = response.css('div.cmn-ttl-tabMain01 > h1::text').extract_first()
-        return item
+    def return_item(self, response):
+        self.item['set'] = response.css('div.cmn-ttl-tabMain01 > h1::text').extract_first()
+        return self.item
 
-    def actors(self, data, thumb):
+    def actors(self, kw):
+        from jav.utils import AvImage
         actors = []
-        for i, item in enumerate(data):
+        for i, item in enumerate(self.item[kw]):
             actor = {}
             m = re.search(r'([\w ]+)(\([\w ]+\))?', item)
             if m: 
@@ -35,38 +36,37 @@ class PipelineR18(PipelineCommon):
                 if m.group(2): actor['role'] = m.group(2)[1:-1]
             else:
                 actor['name'] = item
-            actor['thumb'] = thumb[i]
+            actor['thumb'] = AvImage(self.item['actor_thumb'][i])
             actors.append(actor)
         return actors
 
-    def convert_date(self, data):
-        date = self.strip(data)
-        m = re.search(r'([\w\.]+) (\d+), (\d+)', date)
+    def convert_date(self, kw):
+        self.item[kw] = self.strip(kw)
+        m = re.search(r'([\w\.]+) (\d+), (\d+)', self.item[kw])
         newdate = '%s %s %s'%(m.group(1)[0:3], m.group(2), m.group(3))
-        self.log('old:%s new:%s'%(date, newdate))
+        self.log('old:%s new:%s'%(self.item[kw], newdate))
         try:
             dt = datetime.strptime(newdate, r'%b %d %Y')
             return dt.strftime(r'%Y-%m-%d')
         except ValueError:
-            pass
+            self.log('unkown date format:{}'.format(self.item[kw]))
 
-        self.log('unkown date format:{}'.format(date))
-        return date
 
     def process_item(self, item, spider):
-        item['genre'] = [i.strip() for i in item['genre']]
-        self.filter(item, 'date', self.convert_date)
-        item['director'] = self.strip(item['director'])
-        item['label'] = self.strip(item['label'])
-        item['runtime'] = self.digit(item['runtime'])
-        item['studio'] = item['studio'][0].strip()
-        self.filter(item, 'actor', lambda d: self.actors(d, item['actor_thumb']))
+        self.item = item
+        self.filter('genre', lambda x:[i.strip() for i in item[x]])
+        self.filter('studio', lambda x:item[x][0].strip())
+        self.filter('releasedate', self.convert_date)
+        self.filter('director', self.strip)
+        self.filter('label', self.strip)
+        self.filter('runtime', self.digit)
+        self.filter('actor', self.actors)
 
-        self.list2str(item)
-        request = self.check_full_set_name(item)
+        self.list2str()
+        request = self.check_full_set_name()
         if request:
             dfd = self.crawler.engine.download(request, spider)
-            dfd.addBoth(self.return_item, item)
+            dfd.addBoth(self.return_item)
             return dfd
         else:
             return item

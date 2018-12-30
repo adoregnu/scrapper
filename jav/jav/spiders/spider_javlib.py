@@ -22,7 +22,7 @@ class JavLibrary(scrapy.Spider, Common):
             il = ItemLoader(item=JavItem(), response=response)
             il.add_xpath('title', '//*[@id="video_title"]/h3/a/text()')
             il.add_xpath('id', '//*[@id="video_id"]/table/tr/td[2]/text()')
-            il.add_xpath('date', '//*[@id="video_date"]/table/tr/td[2]/text()')
+            il.add_xpath('releasedate', '//*[@id="video_date"]/table/tr/td[2]/text()')
             il.add_xpath('director', '//*[@id="video_director"]/table/tr/td[2]/span/a/text()')
             il.add_xpath('studio', '//*[@id="video_maker"]/table/tr/td[2]/span/a/text()')
             il.add_xpath('thumb', '//*[@id="video_jacket_img"]/@src')

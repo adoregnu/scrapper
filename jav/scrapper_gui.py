@@ -58,20 +58,20 @@ class ScrapperGui(QMainWindow):
     def createToolbar(self):
         self.toolbar = self.addToolBar('Files')
 
-        action = QAction(QIcon('documents-folder-up@128px.png'), 'Up', self)
+        action = QAction(QIcon('res/documents-folder-up@128px.png'), 'Up', self)
         action.triggered.connect(self.cw.fileView.upDir)
         self.toolbar.addAction(action)
 
-        action = QAction(QIcon('documents-search-folder@128px.png'), 'Browse', self)
+        action = QAction(QIcon('res/documents-search-folder@128px.png'), 'Browse', self)
         action.triggered.connect(self.selectFolder)
         self.toolbar.addAction(action)
 
-        action = QAction(QIcon('documents-folder-download@128px.png'), 'Scrap', self)
+        action = QAction(QIcon('res/documents-folder-download@128px.png'), 'Scrap', self)
         action.triggered.connect(self.cw.scrap)
         self.toolbar.addAction(action)
 
-        action = QAction(QIcon('controls-editor-save@128px.png'), 'Save', self)
-        action.triggered.connect(self.cw.infoForm.updateMovie)
+        action = QAction(QIcon('res/controls-editor-save@128px.png'), 'Save', self)
+        action.triggered.connect(self.cw.saveAll)
         self.toolbar.addAction(action)
 
 

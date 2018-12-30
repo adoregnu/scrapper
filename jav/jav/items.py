@@ -13,7 +13,7 @@ class JavItem(scrapy.Item):
     id = scrapy.Field()
     title = scrapy.Field()
     plot = scrapy.Field()
-    date = scrapy.Field()
+    releasedate = scrapy.Field()
     runtime = scrapy.Field()
     actor = scrapy.Field()
     actor_thumb = scrapy.Field()

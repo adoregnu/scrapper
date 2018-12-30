@@ -1,13 +1,12 @@
 import os, sys
 
 from PyQt5.QtWidgets import QHBoxLayout, QVBoxLayout, QLabel, QWidget, QPushButton
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, QBuffer, QByteArray, QIODevice
 from PyQt5.QtGui import QPixmap, QImage 
 
-from PIL import Image, ImageQt
- 
-from movie_info_form import MovieInfoForm
+from movie_info_view import MovieInfoView
 from folder_view import FolderView
+import jav.utils as utils
 
 class CentralWidget(QWidget):
     def __init__(self, config):
@@ -19,14 +18,14 @@ class CentralWidget(QWidget):
 
         self.fileView = FolderView(config)
         self.fileView.movieFound.connect(self.onFoundMovie)
-        self.infoForm = MovieInfoForm()
+        self.infoView = MovieInfoView()
         
         mainLayout = QHBoxLayout()
-        mainLayout.addWidget(self.fileView)
-        mainLayout.addWidget(self.infoForm)
-        mainLayout.addLayout(self.createImageView())
-        self.setLayout(mainLayout)
+        mainLayout.setContentsMargins(3, 3, 3, 3)
 
+        mainLayout.addWidget(self.fileView)
+        mainLayout.addWidget(self.infoView)
+        self.setLayout(mainLayout)
         self.initCrawlRunner()
 
     def initCrawlRunner(self):
@@ -36,85 +35,64 @@ class CentralWidget(QWidget):
         configure_logging()
         self.runner = CrawlerRunner(get_project_settings())
 
+    def updateFromFile(self, files):
+        self.infoView.clearMovieInfo()
+        if not files: return
 
-    def onFoundMovie(self, files):
-        self.poster.clear()
-        self.fanart.clear()
-        self.infoForm.clearMovieInfo()
+        nfo = next(filter(lambda x:x.endswith('.nfo'), files), False)
+        if not nfo:
+            return
+
+        info = {}
+        info = utils.nfo2dict(nfo)
+        info['path'] = self.fileView.getSelectPath() 
 
         for file in files:
-            if file.endswith('.nfo'):
-                self.infoForm.setMovieInfo(file)
-                continue
-            pixmap = QPixmap(file).scaled(400, 400, Qt.KeepAspectRatio,
-                transformMode=Qt.SmoothTransformation)
-            if 'poster' in file:
-                self.poster.setPixmap(pixmap)
-            elif 'fanart' in file:
-                self.fanart.setPixmap(pixmap)
+            if file.endswith('.nfo'): continue
+            if '-poster' in file:
+                info['poster'] = utils.AvImage(file)
+            elif '-fanart' in file:
+                info['fanart'] = file #utils.AvImage(file)
+        #print('updateFromFile {}'.format(info))
+        self.infoView.setMovieInfo(info)
 
-    def getPosterImage(self):
-        path = self.fileView.absolutePath(self.fileView.currentIndex())
-        _, _, files = next(os.walk(path))
-        poster = next(filter(lambda x: '-poster' in x, files), False)
-        if not poster:
-            return None, None
+    def updateFromScrapy(self, info):
+        self.infoView.clearMovieInfo(False)
 
-        path = '%s/%s'%(path,poster)
-        return Image.open(path), path
+        info['path'] = self.fileView.getSelectPath()
+        info['fanart'] = info['thumb']
+        info['poster'] = info['thumb'].cropLeft()
 
-    def redrawPoster(self, path):
-        self.poster.clear()
-        pixmap = QPixmap(path).scaled(400, 400, Qt.KeepAspectRatio,
-            transformMode=Qt.SmoothTransformation)
-        self.poster.setPixmap(pixmap)
+        self.infoView.setMovieInfo(info)
 
-    def onRotatePoster(self):
-        im, path = self.getPosterImage() 
-        if not path: return
+    def onFoundMovie(self, movieinfo):
+        if isinstance(movieinfo, list):
+            self.updateFromFile(movieinfo)
+        elif isinstance(movieinfo, dict):
+            self.updateFromScrapy(movieinfo)
 
-        rim = im.transpose(Image.ROTATE_90)
-        rim.save(path)
-        self.redrawPoster(path)
+    def onScrapDone(self, _, id):
+        self.onFoundMovie(self.crawledMovieInfo)
+        self.crawledMovieInfo = None
 
-    def onCropLeft(self):
-        im, path = self.getPosterImage()
-        if not path: return
-
-        w, h = im.size
-        cim = im.crop((w - int(w*0.475), 0, w, h))
-        cim.save(path)
-        self.redrawPoster(path)
-
-    def createImageView(self):
-        layout = QVBoxLayout()
-        self.poster = QLabel(self)
-        self.poster.setAlignment(Qt.AlignCenter)
-        self.fanart = QLabel(self)
-        self.fanart.setMinimumWidth(400)
-        self.rotate = QPushButton('Rotate 90 degree')
-        self.rotate.clicked.connect(self.onRotatePoster)
-
-        self.cropLeft = QPushButton('Crop Right')
-        self.cropLeft.clicked.connect(self.onCropLeft)
-        layout.addWidget(self.poster)
-        hbox = QHBoxLayout()
-        hbox.addWidget(self.rotate)
-        hbox.addWidget(self.cropLeft)
-        layout.addLayout(hbox)
-        layout.addWidget(self.fanart)
-        #layout.setContentsMargins(0, 0, 0, 0)
-        #layout.setAlignment(Qt.AlignHCenter)
-        return layout
+    # don't do anything related to Qt UI in scrapy signal. it doesn't work.
+    def onSpiderClosed(self, spider):
+        #import pprint as pp
+        #pp.pprint(spider.movieinfo)
+        self.crawledMovieInfo = spider.movieinfo
 
     def scrap(self):
+        from scrapy import signals
         scrapper_conf = self.globalConfig['Scrapper']
         selected = self.fileView.selectedIndexes()
         for index in selected:
             path = self.fileView.absolutePath(index)
             cid = os.path.basename(path)
             path = '/'.join(path.split('/')[0:-1])
-            self.runner.crawl(scrapper_conf.get('site', 'javlibrary'),
-                keyword=cid,
-                outdir=path
-            ).addBoth(lambda _, id: self.fileView.onListClicked(id), index)
+            crawler = self.runner.create_crawler(scrapper_conf.get('site', 'r18'))
+            crawler.signals.connect(self.onSpiderClosed, signals.spider_closed)
+            deferd = self.runner.crawl(crawler, keyword=cid, outdir=path)
+            deferd.addBoth(self.onScrapDone, index)
+
+    def saveAll(self):
+        self.infoView.updateMovie()

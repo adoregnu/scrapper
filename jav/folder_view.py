@@ -51,7 +51,6 @@ class FolderView(QListView):
 
     def upDir(self):
         tmp = self.config['currdir'].split('/')
-        print(tmp)
         if tmp[0] == '':
             return
         elif len(tmp) == 2 and tmp[1] == '':
@@ -66,3 +65,6 @@ class FolderView(QListView):
 
     def absolutePath(self, index):
         return self.model.fileInfo(index).absoluteFilePath()
+
+    def getSelectPath(self):
+        return self.absolutePath(self.currentIndex())

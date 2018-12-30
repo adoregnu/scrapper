@@ -28,7 +28,7 @@ class Mgstage(scrapy.Spider, Common):
             il.add_xpath('studio',  '//th[contains(., "メーカー：")]/following-sibling::td/a/@href')
             il.add_xpath('runtime', '//th[contains(., "収録時間：")]/following-sibling::td/text()')
             il.add_xpath('id',      '//th[contains(., "品番：")]/following-sibling::td/text()')
-            il.add_xpath('date',    '//th[contains(., "配信開始日：")]/following-sibling::td/text()')
+            il.add_xpath('releasedate',    '//th[contains(., "配信開始日：")]/following-sibling::td/text()')
             il.add_xpath('rating',  '//th[contains(., "評価：")]/following-sibling::td//text()')
             return il.load_item()
         except:

@@ -10,6 +10,8 @@ class Common():
         'www.r18.com' : [{'name':'lg', 'value':'en', 'domain':'r18.com', 'path':'/'}]
     }
 
+    movieinfo = {}
+
     def prepare_request(self):
         targetdir = '/'.join([self.outdir, self.keyword])
         os.makedirs(targetdir, exist_ok=True)
@@ -37,5 +39,10 @@ class Common():
             f.write(body)
             self.log('Saved file %s' % fname)
 
-
+    def initItemLoader(self, il, fields):
+        for field in fields:
+            if field[1].startswith('//'): 
+                il.add_xpath(field[0], field[1])
+            else:
+                il.add_css(field[0], field[1])
 

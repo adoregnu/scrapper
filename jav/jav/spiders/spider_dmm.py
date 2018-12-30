@@ -19,34 +19,41 @@ class Dmm(scrapy.Spider, Common):
                 cookies = self.cookies['www.dmm.co.jp']
             )
 
-    def add_selector_ja(self, il):
-        il.add_xpath('date', '//td[contains(., "商品発売日：")]/following-sibling::td[1]/text()')
-        il.add_xpath('runtime', '//td[contains(., "収録時間：")]/following-sibling::td[1]/text()')
-        il.add_xpath('director', '//td[contains(., "監督：")]/following-sibling::td[1]/a/text()')
-        il.add_xpath('set', '//td[contains(., "シリーズ：")]/following-sibling::td[1]/a/text()')
-        il.add_xpath('studio', '//td[contains(., "メーカー：")]/following-sibling::td[1]/a/text()')
-        il.add_xpath('label', '//td[contains(., "レーベル：")]/following-sibling::td[1]/a/text()')
-        il.add_xpath('genre', '//td[contains(., "ジャンル：")]/following-sibling::td[1]/a/text()')
+    def add_selector_ja(self, fields):
+        fields.extend([
+            ('releasedate', '//td[contains(., "商品発売日：")]/following-sibling::td[1]/text()'),
+            ('runtime', '//td[contains(., "収録時間：")]/following-sibling::td[1]/text()'),
+            ('director', '//td[contains(., "監督：")]/following-sibling::td[1]/a/text()'),
+            ('set', '//td[contains(., "シリーズ：")]/following-sibling::td[1]/a/text()'),
+            ('studio', '//td[contains(., "メーカー：")]/following-sibling::td[1]/a/text()'),
+            ('label', '//td[contains(., "レーベル：")]/following-sibling::td[1]/a/text()'),
+            ('genre', '//td[contains(., "ジャンル：")]/following-sibling::td[1]/a/text()')
+        ])
 
-    def add_selector_en(self, il):
-        il.add_xpath('date', '//td[contains(., "Starting Date of Distribution:")]/following-sibling::td[1]/text()')
-        il.add_xpath('runtime', '//td[contains(., "Delivery time:")]/following-sibling::td[1]/text()')
-        il.add_xpath('director', '//td[contains(., "Supervision:")]/following-sibling::td[1]/a/text()')
-        il.add_xpath('set', '//td[contains(., "Series:")]/following-sibling::td[1]/a/text()')
-        il.add_xpath('studio', '//td[contains(., "Studios:")]/following-sibling::td[1]/a/text()')
-        il.add_xpath('label', '//td[contains(., "Label:")]/following-sibling::td[1]/a/text()')
-        il.add_xpath('genre', '//td[contains(., "Genre:")]/following-sibling::td[1]/a/text()')
+    def add_selector_en(self, fields):
+        fields.extend([
+            ('releasedate', '//td[contains(., "Starting Date of Distribution:")]/following-sibling::td[1]/text()'),
+            ('runtime', '//td[contains(., "Delivery time:")]/following-sibling::td[1]/text()'),
+            ('director', '//td[contains(., "Supervision:")]/following-sibling::td[1]/a/text()'),
+            ('set', '//td[contains(., "Series:")]/following-sibling::td[1]/a/text()'),
+            ('studio', '//td[contains(., "Studios:")]/following-sibling::td[1]/a/text()'),
+            ('label', '//td[contains(., "Label:")]/following-sibling::td[1]/a/text()'),
+            ('genre', '//td[contains(., "Genre:")]/following-sibling::td[1]/a/text()')
+        ])
 
     def parse_search_page(self, response):
         from scrapy.loader import ItemLoader
         lang = {'en' : self.add_selector_en, 'ja': self.add_selector_ja}
+        fieldlist = [
+            ('plot', 'div.mg-b20::text'),
+            ('thumb', '#sample-video > div.tx10.pd-3 > a::attr(href)'),
+            ('title', '//meta[@property="og:title"]/@content'),
+            ('actor', '//*[@id="performer"]/a/text()')
+        ]
         try :
             il = ItemLoader(item=JavItem(), response=response)
-            il.add_css('plot', 'div.mg-b20::text')
-            il.add_css('thumb', '#sample-video > div.tx10.pd-3 > a::attr(href)')
-            il.add_xpath('title', '//meta[@property="og:title"]/@content')
-            il.add_xpath('actor', '//*[@id="performer"]/a/text()')
-            lang[response.meta['lang']](il)
+            lang[response.meta['lang']](fieldlist)
+            self.initItemLoader(il, fieldlist)
             il.add_value('id', self.keyword)
             return il.load_item()
         except:
@@ -68,7 +75,7 @@ class Dmm(scrapy.Spider, Common):
             return
 
         for ppm in [s for s in results if 'ppm/video' in s]:
-            return scrapy.Request(url = ppm[0],
+            return scrapy.Request(url = ppm,
                 callback = self.parse_search_page,
                 cookies = self.cookies['www.dmm.co.jp'],
                 meta = {'lang':'en'}
@@ -78,7 +85,7 @@ class Dmm(scrapy.Spider, Common):
         for digital in [s for s in results if 'digital/videoa' in s]:
             cookie = copy.deepcopy(self.cookies['www.dmm.co.jp'])
             cookie[0]['value'] = 'ja'
-            return scrapy.Request(url = digital[0],
+            return scrapy.Request(url = digital,
                 callback = self.parse_search_page,
                 cookies = cookie,
                 meta = {'lang':'ja'}

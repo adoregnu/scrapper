@@ -21,20 +21,23 @@ class SpiderR18(scrapy.Spider, Common):
     def parse_search_page(self, response):
         from scrapy.loader import ItemLoader
         from jav.items import JavItem
+        fields = [
+            ('title', '//meta[@property="og:title"]/@content'),
+            ('releasedate', '//dt[contains(.,"Release Date:")]/following-sibling::dd[1]/text()'),
+            ('runtime', '//dt[contains(.,"Runtime:")]/following-sibling::dd[1]/text()'),
+            ('director', '//dt[contains(.,"Director:")]/following-sibling::dd[1]/text()'),
+            ('set', '//dt[contains(.,"Series:")]/following-sibling::dd[1]/a'),
+            ('studio', '//dt[contains(.,"Studio:")]/following-sibling::dd[1]/a/text()'),
+            ('label', '//dt[contains(.,"Label:")]/following-sibling::dd[1]/text()'),
+            ('actor', '//label[contains(.,"Actress(es):")]/following-sibling::div[1]/span/a/span/text()'),
+            ('genre', '//label[contains(.,"Categories:")]/following-sibling::div[1]/a/text()'),
+            ('plot', '//h1[contains(., "Product Description")]/following-sibling::p/text()'),
+            ('thumb', 'div.box01.mb10.detail-view > img::attr(src)'),
+            ('actor_thumb','ul.cmn-list-product03.clearfix.mr07 > li > a > p > img::attr(src)')
+        ]
         try :
             il = ItemLoader(item=JavItem(), response=response)
-            il.add_xpath('title',    '//meta[@property="og:title"]/@content')
-            il.add_xpath('date',     '//dt[contains(.,"Release Date:")]/following-sibling::dd[1]/text()')
-            il.add_xpath('runtime',  '//dt[contains(.,"Runtime:")]/following-sibling::dd[1]/text()')
-            il.add_xpath('director', '//dt[contains(.,"Director:")]/following-sibling::dd[1]/text()')
-            il.add_xpath('set',      '//dt[contains(.,"Series:")]/following-sibling::dd[1]/a')
-            il.add_xpath('studio',   '//dt[contains(.,"Studio:")]/following-sibling::dd[1]/a/text()')
-            il.add_xpath('label',    '//dt[contains(.,"Label:")]/following-sibling::dd[1]/text()')
-            il.add_xpath('actor',    '//label[contains(.,"Actress(es):")]/following-sibling::div[1]/span/a/span/text()')
-            il.add_xpath('genre',    '//label[contains(.,"Categories:")]/following-sibling::div[1]/a/text()')
-            il.add_xpath('plot',     '//h1[contains(., "Product Description")]/following-sibling::p/text()')
-            il.add_css('thumb',      'div.box01.mb10.detail-view > img::attr(src)')
-            il.add_css('actor_thumb','ul.cmn-list-product03.clearfix.mr07 > li > a > p > img::attr(src)')
+            self.initItemLoader(il, fields)
             il.add_value('id', self.keyword)
             return il.load_item()
         except:

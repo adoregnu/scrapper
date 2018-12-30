@@ -104,6 +104,7 @@ class FileRenameDialog(QDialog):
         self.renameBtn = QPushButton('Rename')
         self.renameBtn.clicked.connect(self.fileTable.doRename)
         self.cancelBtn = QPushButton('Cancel')
+        self.cancelBtn.clicked.connect(self.close)
         innerBottom.addStretch()
         innerBottom.addWidget(self.previewBtn)
         innerBottom.addWidget(self.renameBtn)
