@@ -3,13 +3,6 @@ import xml.etree.ElementTree as ET
 
 XML_TEMPLATE = '<?xml version="1.0" encoding="UTF-8" standalone="yes" ?><movie></movie>'
 
-def adjust_actor(name):
-    from .actor_map import ACTOR_MAP
-    if ACTOR_MAP.get(name):
-        return ACTOR_MAP[name]
-    else:
-        return name
-
 def indent_xml(elem, level=0):
     i = "\n" + level*"  "
     if len(elem):

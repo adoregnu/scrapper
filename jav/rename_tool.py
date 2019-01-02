@@ -75,7 +75,8 @@ class FileRenameDialog(QDialog):
 
     def getFileList(self):
         import glob
-        exts = ('*.mp4', '*.mkv', '*.avi', '*.wmv', '*.smi', '*.srt', '*.sup')
+        exts = ('*.mp4', '*.mkv', '*.avi', '*.wmv', '*.smi',
+            '*.srt', '*.sup', '*.idx', '*.sub')
         files = []
         for ext in exts:
             files.extend(glob.glob('%s/%s'%(self.path, ext)))

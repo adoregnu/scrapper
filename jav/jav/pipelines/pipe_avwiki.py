@@ -1,4 +1,3 @@
-
 from .pipe_mgs import PipelineMgs
 
 class PipelineAvwiki(PipelineMgs):
@@ -13,7 +12,6 @@ class PipelineAvwiki(PipelineMgs):
             self.completedMgs = True
         else:
             self.list2str()
-            self.filter('actor', lambda d: {'name':d, 'thumb':item['actor_thumb']})
+            self.filter('actor', lambda d: {'name':item[d], 'thumb':item['actor_thumb']})
 
         return item
-

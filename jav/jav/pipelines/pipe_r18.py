@@ -27,6 +27,7 @@ class PipelineR18(PipelineCommon):
 
     def actors(self, kw):
         from jav.utils import AvImage
+        from jav.actor_map import adjust_actor
         actors = []
         for i, item in enumerate(self.item[kw]):
             actor = {}
@@ -36,6 +37,7 @@ class PipelineR18(PipelineCommon):
                 if m.group(2): actor['role'] = m.group(2)[1:-1]
             else:
                 actor['name'] = item
+            actor['name'] = adjust_actor(actor['name'])
             actor['thumb'] = AvImage(self.item['actor_thumb'][i])
             actors.append(actor)
         return actors
@@ -44,7 +46,7 @@ class PipelineR18(PipelineCommon):
         self.item[kw] = self.strip(kw)
         m = re.search(r'([\w\.]+) (\d+), (\d+)', self.item[kw])
         newdate = '%s %s %s'%(m.group(1)[0:3], m.group(2), m.group(3))
-        self.log('old:%s new:%s'%(self.item[kw], newdate))
+        #self.log('old:%s new:%s'%(self.item[kw], newdate))
         try:
             dt = datetime.strptime(newdate, r'%b %d %Y')
             return dt.strftime(r'%Y-%m-%d')

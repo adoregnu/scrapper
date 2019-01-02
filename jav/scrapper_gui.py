@@ -3,7 +3,7 @@ import os, sys
 from PyQt5.QtWidgets import (QApplication, QMainWindow, QMenu, QMenuBar, QDialog,
     QAction, QActionGroup, QFileDialog, QToolButton, QComboBox)
 
-from PyQt5.QtGui import QIcon
+from PyQt5.QtGui import QIcon, QFont
 from PyQt5.QtCore import Qt, QUrl
 
 from central_widget import CentralWidget
@@ -16,6 +16,7 @@ class ScrapperGui(QMainWindow):
 
     def __init__(self, reactor):
         super().__init__()
+        self.setFont(QFont("Calibri", 10))
         self.setWindowTitle("Movie Scrapper")
         import configparser
         self.config = configparser.ConfigParser()
@@ -76,9 +77,9 @@ class ScrapperGui(QMainWindow):
 
 
         self.scrapToolbar = self.addToolBar('Scrapper')
-        self.sites = QComboBox()
+        self.sites = QComboBox(self)
         site = self.scrapperConf.get('site', 'javlibrary')
-        sites = ['javlibrary', 'avwiki', 'dmm', 'r18', 'mgstage', 'actionjav']
+        sites = ['javlibrary', 'avwiki', 'dmm', 'r18', 'mgstage', 'javbus', 'javfree']
         self.sites.insertItems(1, sites)
         self.sites.setCurrentText(site)
         self.sites.currentTextChanged.connect(self.setSite)
@@ -94,6 +95,8 @@ class ScrapperGui(QMainWindow):
         filemenu.addAction(action)
 
 if __name__ == '__main__':
+    QApplication.setAttribute(Qt.AA_EnableHighDpiScaling, True)
+    QApplication.setAttribute(Qt.AA_UseHighDpiPixmaps, True)
     app = QApplication(sys.argv)
     import qt5reactor
     qt5reactor.install()

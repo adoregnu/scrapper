@@ -13,9 +13,9 @@ from PIL import Image, ImageQt
 import jav.utils as utils
 from movie_info_model import MovieInfoModel
 
-class EditableListWidget(QWidget):
+class ListWidget(QWidget):
     def __init__(self, parent=None):
-        super(EditableListWidget, self).__init__(parent)
+        super().__init__(parent)
         mainLayout = QHBoxLayout()
         mainLayout.setContentsMargins(0, 0, 0, 0)
         self._listWidget = QListWidget()
@@ -70,7 +70,7 @@ class EditableListWidget(QWidget):
 
     listValue = pyqtProperty(str, getListValue, setListValue)
 
-class EditableImageLabel(QWidget):
+class ImageLabel(QWidget):
     _image = None 
     def __init__(self, title, editable = True, parent=None):
         super().__init__(parent)
@@ -133,12 +133,12 @@ class EditableImageLabel(QWidget):
 
     def onClickCrop(self):
         #print('onClickCrop')
-        self._image = self._image.cropLeft()
+        self._image = self._image.cropLeft(0.5)
         self.draw()
         QApplication.postEvent(self,
             QKeyEvent(QEvent.KeyPress, Qt.Key_Enter, Qt.NoModifier))
 
-class LabelDelegate(QStyledItemDelegate):
+class MovieInfoDelegate(QStyledItemDelegate):
     def __init__(self, parent = None):
         super().__init__(parent)
 
@@ -169,10 +169,10 @@ class MovieInfoView(QWidget):
     ID_CTRL = 2
     def __init__(self):
         super().__init__()
-        self.initControls()
-        self.mapControls()
+        self.initWidgets()
+        self.mapWidget2Model()
 
-    def initControls(self):
+    def initWidgets(self):
         from collections import OrderedDict
         self.controls = OrderedDict() 
         self.controls['path'] = ['Path:', QLineEdit()]
@@ -184,8 +184,8 @@ class MovieInfoView(QWidget):
         self.controls['studio'] = ['Studio:', QLineEdit()]
         self.controls['set'] = ['Movie Set:', QLineEdit()]
         self.controls['plot'] = ['Plot:', QPlainTextEdit()]
-        self.controls['genre'] = ['Genre:', EditableListWidget()]
-        self.controls['actor'] = ['Actor:', EditableListWidget()]
+        self.controls['genre'] = ['Genre:', ListWidget()]
+        self.controls['actor'] = ['Actor:', ListWidget()]
 
         left = QGridLayout()
         row = 0
@@ -199,8 +199,8 @@ class MovieInfoView(QWidget):
             row += 1
 
         right = QVBoxLayout()
-        self.poster = EditableImageLabel('poster')
-        self.fanart = EditableImageLabel('fanart', False)
+        self.poster = ImageLabel('poster')
+        self.fanart = ImageLabel('fanart', False)
         right.addWidget(self.poster)
         right.addWidget(self.fanart)
 
@@ -210,7 +210,7 @@ class MovieInfoView(QWidget):
         layout.addLayout(right)
         self.setLayout(layout)
 
-    def mapControls(self):
+    def mapWidget2Model(self):
         self.mapper = QDataWidgetMapper(self)
         self.model = MovieInfoModel()
         self.mapper.setModel(self.model)
@@ -225,7 +225,7 @@ class MovieInfoView(QWidget):
         self.mapper.addMapping(self.poster, index)
         index += 1
         self.mapper.addMapping(self.fanart, index)
-        self.mapper.setItemDelegate(LabelDelegate())
+        self.mapper.setItemDelegate(MovieInfoDelegate())
 
     def onChecked(self, state):
         columnFilter = []

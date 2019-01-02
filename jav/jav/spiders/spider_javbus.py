@@ -4,8 +4,8 @@ import traceback
 from .common import Common 
 from jav.items import JavItem
 
-class JavLibrary(scrapy.Spider, Common):
-    name = "actionjav"
+class JavBus(scrapy.Spider, Common):
+    name = "javbus"
     #custom_settings = {
     #    'ITEM_PIPELINES': { 'jav.pipelines.pipe_javlib.PipelineJavlib': 300 }
     #}

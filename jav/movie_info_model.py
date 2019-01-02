@@ -51,6 +51,8 @@ class MovieInfoModel(QAbstractItemModel):
             thumb = actor['thumb']
             thumb.save('%s/%s'%(path, os.path.basename(thumb.url)))
 
+        if not self.movieInfo.get('actor'): return
+
         actors = self.movieInfo['actor']
         #print(actors)
         if isinstance(actors, list):

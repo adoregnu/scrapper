@@ -11,6 +11,6 @@ class PipelineMgs(PipelineCommon):
         self.filter('studio', lambda x:item[x][0].split('=')[1])
         self.filter('title', self.strip)
         self.filter('runtime', self.digit)
-        self.filter('rating', lambda x: self.digit(''.join([i.strip() for i in item[x]])))
+        self.filter('rating', self.digit)
         self.list2str()
         return item

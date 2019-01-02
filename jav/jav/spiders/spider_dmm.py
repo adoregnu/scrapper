@@ -27,7 +27,7 @@ class Dmm(scrapy.Spider, Common):
             ('set', '//td[contains(., "シリーズ：")]/following-sibling::td[1]/a/text()'),
             ('studio', '//td[contains(., "メーカー：")]/following-sibling::td[1]/a/text()'),
             ('label', '//td[contains(., "レーベル：")]/following-sibling::td[1]/a/text()'),
-            ('genre', '//td[contains(., "ジャンル：")]/following-sibling::td[1]/a/text()')
+            ('genre', '//td[contains(., "ジャンル：")]/following-sibling::td[1]/a/text()'),
         ])
 
     def add_selector_en(self, fields):
@@ -57,19 +57,12 @@ class Dmm(scrapy.Spider, Common):
             il.add_value('id', self.keyword)
             return il.load_item()
         except:
-            self.save_html(response.body)
+            #self.save_html(response.body)
             self.log(traceback.format_exc())
 
     def parse_search_list(self, response):
-        results = response.css('p.tmb > a::attr(href)').extract()
-        if not len(results):
-            self.log('not found {}'.format(self.keyword))
-            return
+        results, cids = self.get_dmm_cids(response)
 
-        self.log(results)
-
-        prog = re.compile(r'cid=(\w+)/')
-        cids = [prog.search(url).group(1) for url in results]
         if len(set(cids)) != 1:
             self.log('found more then 1 movies({}) from keyword:({})'.format(cids, self.keyword))
             return

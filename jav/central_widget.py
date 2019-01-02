@@ -59,10 +59,16 @@ class CentralWidget(QWidget):
     def updateFromScrapy(self, info):
         self.infoView.clearMovieInfo(False)
 
+        donotcrop = ['heyzo','1pondo', 'Carib', 'caribpr', 'pacopacomama']
         info['path'] = self.fileView.getSelectPath()
-        info['fanart'] = info['thumb']
-        info['poster'] = info['thumb'].cropLeft()
-
+        try :
+            info['fanart'] = info['thumb']
+            if info['studio'] in donotcrop:
+                info['poster'] = info['thumb']
+            else:
+                info['poster'] = info['thumb'].cropLeft()
+        except Exception as e:
+            print('updateFromScrapy : {}'.format(str(e)))
         self.infoView.setMovieInfo(info)
 
     def onFoundMovie(self, movieinfo):

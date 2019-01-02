@@ -2,7 +2,9 @@ import os
 import glob
 
 from PyQt5.QtWidgets import QFileSystemModel, QListView
-from PyQt5.QtCore import pyqtSignal, pyqtSlot 
+from PyQt5.QtCore import Qt, pyqtSignal, pyqtSlot 
+
+
 
 class FolderView(QListView):
     movieFound = pyqtSignal(list)
@@ -16,14 +18,19 @@ class FolderView(QListView):
         self.changeDir(self.config.get('currdir', ''))
 
         self.setWindowTitle("Dir View")
-        self.resize(200, 480)
+        self.resize(200, 400)
         self.setMaximumWidth(200)
         self.doubleClicked.connect(self.onListDoubleClicked)
         self.clicked.connect(self.onListClicked)
 
     def keyPressEvent(self, event):
         super().keyPressEvent(event)
-        self.onListClicked(self.currentIndex())
+        if event.key() in [Qt.Key_Return, Qt.Key_Enter]:
+            self.onListDoubleClicked(self.currentIndex())
+        if event.key() == Qt.Key_Backspace:
+            self.upDir()
+        else:
+            self.onListClicked(self.currentIndex())
 
     def onListDoubleClicked(self, index):
         finfo = self.model.fileInfo(index)
