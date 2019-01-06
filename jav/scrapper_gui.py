@@ -50,7 +50,7 @@ class ScrapperGui(QMainWindow):
         if dialog.exec_() == QDialog.Accepted:
             directory = dialog.selectedFiles()[0]
             #print(directory)
-            self.cw.fileView.changeDir(directory)
+            self.cw.changeDir(directory)
 
     def setSite(self, site):
         #print(site)
@@ -60,7 +60,7 @@ class ScrapperGui(QMainWindow):
         self.toolbar = self.addToolBar('Files')
 
         action = QAction(QIcon('res/documents-folder-up@128px.png'), 'Up', self)
-        action.triggered.connect(self.cw.fileView.upDir)
+        action.triggered.connect(self.cw.upDir)
         self.toolbar.addAction(action)
 
         action = QAction(QIcon('res/documents-search-folder@128px.png'), 'Browse', self)
@@ -75,6 +75,11 @@ class ScrapperGui(QMainWindow):
         action.triggered.connect(self.cw.saveAll)
         self.toolbar.addAction(action)
 
+        '''
+        action = QAction(QIcon('res/controls-editor-refresh@128px.png'), 'Refresh', self)
+        action.triggered.connect(self.cw.refresh)
+        self.toolbar.addAction(action)
+        '''
 
         self.scrapToolbar = self.addToolBar('Scrapper')
         self.sites = QComboBox(self)
@@ -91,7 +96,7 @@ class ScrapperGui(QMainWindow):
         #filemenu.addToolBar()
 
         action = QAction('Rename files', self)
-        action.triggered.connect(self.cw.fileView.fileRenameTool)
+        action.triggered.connect(self.cw.fileRenameTool)
         filemenu.addAction(action)
 
 if __name__ == '__main__':

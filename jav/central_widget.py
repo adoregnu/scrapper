@@ -1,10 +1,9 @@
 import os, sys
 
-from PyQt5.QtWidgets import QHBoxLayout, QVBoxLayout, QLabel, QWidget, QPushButton
-from PyQt5.QtCore import Qt, QBuffer, QByteArray, QIODevice
-from PyQt5.QtGui import QPixmap, QImage 
+from PyQt5.QtWidgets import QHBoxLayout, QWidget, QTabWidget
 
 from movie_info_view import MovieInfoView
+from movie_list_view import MovieListView
 from folder_view import FolderView
 import jav.utils as utils
 
@@ -14,18 +13,27 @@ class CentralWidget(QWidget):
 
         self.globalConfig = config
         if not 'FolderView' in config.sections():
-            config.add_section('FolderView')
+            config.add_section('y')
 
-        self.fileView = FolderView(config)
-        self.fileView.movieFound.connect(self.onFoundMovie)
-        self.infoView = MovieInfoView()
-        
         mainLayout = QHBoxLayout()
         mainLayout.setContentsMargins(3, 3, 3, 3)
 
+        self.fileView = FolderView(config)
+        self.fileView.movieFound.connect(self.onFoundMovie)
         mainLayout.addWidget(self.fileView)
-        mainLayout.addWidget(self.infoView)
+
+        self.movieTab = QTabWidget()
+        self.movieTab.setContentsMargins(0, 0, 0, 0)
+        self.listView = MovieListView(config, self.fileView.model, parent=self)
+        self.listView.movieDoubleClicked.connect(self.onMovieDoubleClicked)
+        self.movieTab.addTab(self.listView, 'List')
+
+        self.infoView = MovieInfoView()
+        self.movieTab.addTab(self.infoView, 'Detail')
+        
+        mainLayout.addWidget(self.movieTab)
         self.setLayout(mainLayout)
+
         self.initCrawlRunner()
 
     def initCrawlRunner(self):
@@ -34,6 +42,10 @@ class CentralWidget(QWidget):
         from scrapy.utils.project import get_project_settings
         configure_logging()
         self.runner = CrawlerRunner(get_project_settings())
+
+    def onMovieDoubleClicked(self, index):
+        self.movieTab.setCurrentWidget(self.infoView)
+        self.fileView.setCurrentIndex(index)
 
     def updateFromFile(self, files):
         self.infoView.clearMovieInfo()
@@ -45,7 +57,7 @@ class CentralWidget(QWidget):
 
         info = {}
         info = utils.nfo2dict(nfo)
-        info['path'] = self.fileView.getSelectPath() 
+        info['path'] = self.fileView.getPath() 
 
         for file in files:
             if file.endswith('.nfo'): continue
@@ -60,7 +72,6 @@ class CentralWidget(QWidget):
         self.infoView.clearMovieInfo(False)
 
         donotcrop = ['heyzo','1pondo', 'Carib', 'caribpr', 'pacopacomama']
-        info['path'] = self.fileView.getSelectPath()
         try :
             info['fanart'] = info['thumb']
             if info['studio'] in donotcrop:
@@ -90,15 +101,28 @@ class CentralWidget(QWidget):
     def scrap(self):
         from scrapy import signals
         scrapper_conf = self.globalConfig['Scrapper']
-        selected = self.fileView.selectedIndexes()
+        selected = self.fileView.getSelectedIndexes()
         for index in selected:
-            path = self.fileView.absolutePath(index)
+            path = self.fileView.getPath(index)
             cid = os.path.basename(path)
-            path = '/'.join(path.split('/')[0:-1])
+            #path = '/'.join(path.split('/')[0:-1])
             crawler = self.runner.create_crawler(scrapper_conf.get('site', 'r18'))
             crawler.signals.connect(self.onSpiderClosed, signals.spider_closed)
             deferd = self.runner.crawl(crawler, keyword=cid, outdir=path)
             deferd.addBoth(self.onScrapDone, index)
 
     def saveAll(self):
-        self.infoView.updateMovie()
+        self.infoView.saveMovieInfo()
+        self.listView.refresh()
+
+    def changeDir(self, path):
+        self.fileView.folderList.changeDir(path)
+
+    def upDir(self):
+        self.fileView.folderList.upDir()
+
+    def fileRenameTool(self):
+        config = self.globalConfig['FolderView']
+        from rename_tool import FileRenameDialog
+        dlg = FileRenameDialog(config.get('currdir', ''), self)
+        dlg.exec_()

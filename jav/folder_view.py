@@ -1,39 +1,28 @@
 import os
 import glob
 
-from PyQt5.QtWidgets import QFileSystemModel, QListView
+from PyQt5.QtWidgets import QFileSystemModel, QListView, QWidget, QVBoxLayout, QLineEdit
 from PyQt5.QtCore import Qt, pyqtSignal, pyqtSlot 
 
-
-
-class FolderView(QListView):
-    movieFound = pyqtSignal(list)
-
-    def __init__(self, config):
-        super().__init__()
-        self.globalConfig = config
-        self.config = config['FolderView']
-        self.model = QFileSystemModel()
-        self.setModel(self.model)
-        self.changeDir(self.config.get('currdir', ''))
-
+class FolderList(QListView):
+    def __init__(self, config, parent=None):
+        super().__init__(parent)
+        self.config = config
         self.setWindowTitle("Dir View")
-        self.resize(200, 400)
-        self.setMaximumWidth(200)
-        self.doubleClicked.connect(self.onListDoubleClicked)
         self.clicked.connect(self.onListClicked)
+        self.doubleClicked.connect(self.onListDoubleClicked)
 
     def keyPressEvent(self, event):
         super().keyPressEvent(event)
         if event.key() in [Qt.Key_Return, Qt.Key_Enter]:
-            self.onListDoubleClicked(self.currentIndex())
+            self.doubleClicked.emit(self.currentIndex())
         if event.key() == Qt.Key_Backspace:
             self.upDir()
-        else:
-            self.onListClicked(self.currentIndex())
+        elif event.key() in [Qt.Key_Up, Qt.Key_Down]:
+            self.clicked.emit(self.currentIndex())
 
     def onListDoubleClicked(self, index):
-        finfo = self.model.fileInfo(index)
+        finfo = self.model().fileInfo(index)
         if not finfo.isDir():
             return
 
@@ -41,7 +30,7 @@ class FolderView(QListView):
         self.changeDir(path)
 
     def onListClicked(self, index):
-        finfo = self.model.fileInfo(index)
+        finfo = self.model().fileInfo(index)
 
         info_files = []
         if finfo.isDir():
@@ -50,10 +39,10 @@ class FolderView(QListView):
             info_files.extend(glob.glob('%s/*.nfo'%path))
             info_files.extend(glob.glob('%s/*.jpg'%path))
 
-        self.movieFound.emit(info_files)
+        self.parent().movieFound.emit(info_files)
 
     def changeDir(self, path):
-        self.setRootIndex(self.model.setRootPath(path))
+        self.setRootIndex(self.model().setRootPath(path))
         self.config['currdir'] = path
 
     def upDir(self):
@@ -65,13 +54,37 @@ class FolderView(QListView):
         else:
             self.changeDir('/'.join(tmp[0:-1]))
 
-    def fileRenameTool(self):
-        from rename_tool import FileRenameDialog
-        dlg = FileRenameDialog(self.config.get('currdir', ''), self)
-        dlg.exec_()
+class FolderView(QWidget):
+    movieFound = pyqtSignal(list)
 
-    def absolutePath(self, index):
-        return self.model.fileInfo(index).absoluteFilePath()
+    def __init__(self, config):
+        super().__init__()
+        self.config = config['FolderView']
+        self.resize(200, 400)
+        self.setMaximumWidth(200)
+        self.setMinimumWidth(150)
 
-    def getSelectPath(self):
-        return self.absolutePath(self.currentIndex())
+        layout = QVBoxLayout()
+        layout.setContentsMargins(0, 0, 0, 0)
+
+        self.currPath = QLineEdit()
+        self.model = QFileSystemModel()
+        self.model.rootPathChanged.connect(self.currPath.setText)
+        self.folderList = FolderList(self.config, parent=self)
+        self.folderList.setModel(self.model)
+        self.folderList.changeDir(self.config.get('currdir', ''))
+
+        layout.addWidget(self.currPath)
+        layout.addWidget(self.folderList)
+        self.setLayout(layout)
+
+    def setCurrentIndex(self, index):
+        self.folderList.setCurrentIndex(index)
+        self.folderList.onListClicked(index)
+
+    def getPath(self, index = None):
+        if not index: index = self.folderList.currentIndex()
+        return self.model.filePath(index)
+
+    def getSelectedIndexes(self):
+        return self.folderList.selectedIndexes()

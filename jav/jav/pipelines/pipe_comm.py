@@ -25,6 +25,7 @@ class PipelineCommon(object):
 
     def close_spider(self, spider):
         spider.movieinfo = dict(self.item)
+        spider.movieinfo['path'] = spider.outdir
         if 'releasedate' in spider.movieinfo:
             spider.movieinfo['year'] = spider.movieinfo['releasedate'].split('-')[0]
         if 'actor_thumb' in spider.movieinfo:

@@ -16,8 +16,8 @@ class Common():
     movieinfo = {}
 
     def prepare_request(self):
-        targetdir = '/'.join([self.outdir, self.keyword])
-        os.makedirs(targetdir, exist_ok=True)
+        #targetdir = '/'.join([self.outdir, self.keyword])
+        #os.makedirs(targetdir, exist_ok=True)
         if isinstance(self.keyword, str):
             kws = [self.keyword]
         else:

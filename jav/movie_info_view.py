@@ -5,8 +5,8 @@ import xml.etree.ElementTree as ET
 from PyQt5.QtWidgets import (QLabel, QLineEdit, QPlainTextEdit, QListWidget,
     QDataWidgetMapper, QWidget, QHBoxLayout, QVBoxLayout, QPushButton,
     QApplication, QStyledItemDelegate, QFrame, QGridLayout, QCheckBox)
-from PyQt5.QtCore import (Qt, pyqtProperty, QEvent)
-from PyQt5.QtGui import QKeyEvent, QPixmap
+from PyQt5.QtCore import (Qt, pyqtProperty, QEvent, QSize)
+from PyQt5.QtGui import QKeyEvent, QPixmap, QWindow
  
 from PIL import Image, ImageQt
 
@@ -55,6 +55,9 @@ class ListWidget(QWidget):
         item = self._listWidget.currentItem()
         print(item.text())
         self._listWidget.takeItem(self._listWidget.row(item))
+        QApplication.postEvent(self,
+            QKeyEvent(QEvent.KeyPress, Qt.Key_Enter, Qt.NoModifier))
+
 
     def getListValue(self):
         #print('getListValue')
@@ -98,9 +101,13 @@ class ImageLabel(QWidget):
 
     def draw(self):
         self._label.clear()
+        pr = QWindow().devicePixelRatio()
+        size = QSize(self._label.width(), self._label.height()) * pr
+ 
         qim = ImageQt.ImageQt(self._image.image())
-        pixmap = QPixmap.fromImage(qim).scaled(400, 400, Qt.KeepAspectRatio,
-                transformMode=Qt.SmoothTransformation)
+        pixmap = QPixmap.fromImage(qim)
+        pixmap.setDevicePixelRatio(pr)
+        pixmap = pixmap.scaled(size, Qt.KeepAspectRatio, transformMode=Qt.SmoothTransformation)
         self._label.setPixmap(pixmap)
 
     def image(self):
@@ -133,7 +140,7 @@ class ImageLabel(QWidget):
 
     def onClickCrop(self):
         #print('onClickCrop')
-        self._image = self._image.cropLeft(0.5)
+        self._image = self._image.cropLeft()
         self.draw()
         QApplication.postEvent(self,
             QKeyEvent(QEvent.KeyPress, Qt.Key_Enter, Qt.NoModifier))
@@ -248,6 +255,10 @@ class MovieInfoView(QWidget):
     
         self.mapper.toFirst()
 
-    def updateMovie(self):
+    def saveMovieInfo(self):
+        import traceback
         #print('updateMovie')
-        self.model.saveMovieInfo()
+        try:
+            self.model.saveMovieInfo()
+        except:
+            traceback.print_exc()

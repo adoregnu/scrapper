@@ -1,4 +1,5 @@
 import os
+import traceback
 
 from PyQt5.QtWidgets import (QHBoxLayout, QVBoxLayout, QLabel, QPushButton, QDialog, QLineEdit,
     QListWidget, QTableWidget, QTableWidgetItem, QHeaderView, QAbstractItemView)
@@ -33,22 +34,26 @@ class FileList(QTableWidget):
         import re
         #toremove = ['FHD', 'fhd', 'hhb', '1080', '720']
         #subprog = re.compile('|'.join(toremove))
-
-        idprog = re.compile(self.parent().regexp.text())
+        try :
+            idprog = re.compile(self.parent().regexp.text())
+        except:
+            traceback.print_exc()
         for index in range(self.rowCount()):
             file = self.item(index, 0).text()
-            ext = file.split('.')[-1]
+            tmp = file.split('.')
+            ext = tmp[-1]
             #file = subprog.sub('', file)
+            nameonly = ''.join(tmp[0:-1])
             try:
-                m = idprog.search(file)
+                m = idprog.search(nameonly)
                 cid = '-'.join([m.group(1), m.group(2)]).upper()
                 if m.lastindex == 2:
                     new = '{0}/{0}.{1}'.format(cid, ext)
                 elif m.lastindex == 3:
                     new = '{0}/{0}-{1}.{2}'.format(cid, m.group(3), ext)
                 self.setItem(index, 1, QTableWidgetItem(new))
-            except Exception as e:
-                print(e)
+            except:
+                traceback.print_exc()
 
     def doRename(self):
         import shutil
@@ -56,6 +61,7 @@ class FileList(QTableWidget):
         while self.rowCount() > 0:
             srcf = self.item(index, 0).text()
             dstf = self.item(index, 1).text()
+            if not dstf: continue
             srcp = '/'.join([self.parent().path, srcf])
             dstp = '/'.join([self.parent().path, dstf])
             try:
