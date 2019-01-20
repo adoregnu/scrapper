@@ -26,10 +26,13 @@ class Common():
 
     def get_cid(self, k = None):
         if not k: k = self.keyword
-        if len(k.split('-')[-1]) > 3:
+        numpartlen = len(k.split('-')[-1])
+        if numpartlen == 3:
+            cid = k.replace('-', '00')
+        elif numpartlen == 4:
             cid = k.replace('-', '0')
         else:
-            cid = k.replace('-', '00')
+            cid = k.replace('-','')
         return cid
 
     def get_out_path(self):
@@ -37,17 +40,23 @@ class Common():
 
     def save_html(self, body, fname = None):
         fname = self.keyword if not fname else fname
-        fname = '%s/%s.html' % (self.get_out_path(), fname)
+        fname = '%s/%s.html' % (self.outdir, fname)
         with open(fname, 'wb') as (f):
             f.write(body)
             self.log('Saved file %s' % fname)
 
     def initItemLoader(self, il, fields):
+        add = lambda fn, f: \
+            fn(f[0], f[1], re=f[2]) if len(f) == 3 else \
+            fn(f[0], f[1])
+
         for field in fields:
             if field[1].startswith('//'): 
-                il.add_xpath(field[0], field[1])
+                add(il.add_xpath, field)
+                #il.add_xpath(field[0], field[1])
             else:
-                il.add_css(field[0], field[1])
+                add(il.add_css, field)
+                #il.add_css(field[0], field[1])
 
     def get_dmm_cids(self, response):
         results = response.css('p.tmb > a::attr(href)').extract()

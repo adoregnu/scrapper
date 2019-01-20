@@ -53,14 +53,12 @@ class ListWidget(QWidget):
             return
 
         item = self._listWidget.currentItem()
-        print(item.text())
+        #print(item.text())
         self._listWidget.takeItem(self._listWidget.row(item))
         QApplication.postEvent(self,
             QKeyEvent(QEvent.KeyPress, Qt.Key_Enter, Qt.NoModifier))
 
-
     def getListValue(self):
-        #print('getListValue')
         vals = []
         for i in range(self._listWidget.count()):
             vals.append(self._listWidget.item(i).text())

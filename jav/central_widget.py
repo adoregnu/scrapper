@@ -1,5 +1,5 @@
 import os, sys
-
+import traceback
 from PyQt5.QtWidgets import QHBoxLayout, QWidget, QTabWidget
 
 from movie_info_view import MovieInfoView
@@ -64,23 +64,23 @@ class CentralWidget(QWidget):
             if '-poster' in file:
                 info['poster'] = utils.AvImage(file)
             elif '-fanart' in file:
-                info['fanart'] = file #utils.AvImage(file)
-        #print('updateFromFile {}'.format(info))
+                info['fanart'] = file
         self.infoView.setMovieInfo(info)
 
     def updateFromScrapy(self, info):
         self.infoView.clearMovieInfo(False)
 
-        donotcrop = ['heyzo','1pondo', 'Carib', 'caribpr', 'pacopacomama']
+        donotcrop = ['heyzo','1pondo', 'Carib', 'caribpr', 'pacopacomama', 'nanpatv']
         try :
             info['fanart'] = info['thumb']
             if info['studio'] in donotcrop:
                 info['poster'] = info['thumb']
             else:
                 info['poster'] = info['thumb'].cropLeft()
-        except Exception as e:
-            print('updateFromScrapy : {}'.format(str(e)))
-        self.infoView.setMovieInfo(info)
+
+            self.infoView.setMovieInfo(info)
+        except:
+            traceback.print_exc()
 
     def onFoundMovie(self, movieinfo):
         if isinstance(movieinfo, list):
@@ -126,3 +126,6 @@ class CentralWidget(QWidget):
         from rename_tool import FileRenameDialog
         dlg = FileRenameDialog(config.get('currdir', ''), self)
         dlg.exec_()
+
+    def refresh(self):
+        self.listView.refresh()

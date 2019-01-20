@@ -60,6 +60,10 @@ class SpiderAvwiki(scrapy.Spider, Common):
             if not sites.get(domain):
                 self.log('unknown domain! %s' % domain)
                 continue
+
+            if domain == 'www.mgstage.com':
+                link = 'https://www.mgstage.com/product/product_detail/%s'%link.split('/')[-2]
+
             yield scrapy.Request(
                 url = link,
                 callback = sites[domain],

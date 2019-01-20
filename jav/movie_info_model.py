@@ -76,30 +76,66 @@ class MovieInfoModel(QAbstractItemModel):
             return self.createIndex(row, column, item)
         else:
             return self.createIndex(row, column, '')
-    
+
+    def setGenre(self, value):
+        key = 'genre'
+        item = self.movieInfo.get(key)
+        if isinstance(item, list):
+            item.append(value.split(';')[-1])
+        else:
+            self.movieInfo[key] = value.split(';')
+
+    def setActor(self, value):
+        key = 'actor'
+        actors = self.movieInfo.get(key)
+        if actors and not isinstance(actors, list):
+            actors = [actors]
+        else:
+            actors = []
+
+        if not len(value):
+            names = []
+        else:
+            names = value.split(';')
+            names.sort()
+        #print('names: ', names)
+        if not len(actors):
+            actors.append({'name':value})
+        else:
+            actors = sorted(actors, key=lambda a: a['name'])
+            i = 0
+            j = 0
+            while i < len(names) and j < len(actors):
+                actor = actors[j]['name']
+                if names[i] == actor:
+                    i += 1
+                    j += 1
+                elif names[i] < actor:
+                    actors.insert(j, {'name':names[i]})
+                    i += 1
+                    j += 1
+                elif names[i] > actor:
+                    actors.pop(j)
+
+            while j < len(actors):
+                actors.pop(j)
+            while i < len(names):
+                actors.append({'name':names[i]})
+                i += 1
+
+        self.movieInfo[key] = actors
+        #print('result: {}'.format(actors))
+
     def setData(self, index, value, role=Qt.EditRole):
         if not index.isValid():
-            return
+            return False
 
         key = self.row[index.row()][index.column()]
         #key = self.index2key[index.column()]
         if key == 'genre':
-            item = self.movieInfo.get(key)
-            if isinstance(item, list):
-                item.append(value.split(';')[-1])
-            else:
-                self.movieInfo[key] = value.split(';')
+            self.setGenre(value)
         elif key == 'actor':
-            item = self.movieInfo.get(key)
-            if isinstance(item, dict):
-                self.movieInfo[key] = [item]
-                item = self.movieInfo[key]
-                item.append({'name':value.split(';')[-1]})
-            elif isinstance(item, list):
-                item.append({'name':value.split(';')[-1]})
-            else:
-                self.movieInfo[key] = {'name':value}
-                item = self.movieInfo[key]
+            self.setActor(value)
         else: #if isinstance(value, str) and len(value) > 0:
             self.movieInfo[key] = value
         return True

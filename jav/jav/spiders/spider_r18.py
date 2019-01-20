@@ -13,7 +13,7 @@ class SpiderR18(scrapy.Spider, Common):
         url = 'http://www.r18.com/common/search/searchword='
         kws = self.prepare_request()
         for k in kws:
-            yield scrapy.Request(url='%s%s/'%(url, self.get_cid(k)),
+            yield scrapy.Request(url='%s%s/'%(url, k),
                 callback=self.parse_search_list,
                 cookies = self.cookies['www.r18.com']
             )
@@ -47,15 +47,20 @@ class SpiderR18(scrapy.Spider, Common):
     def parse_search_list(self, response):
         results = response.css('ul.cmn-list-product01.type01 > li > a::attr(href)').extract()
 
-        prog = re.compile(r'id=(?:h_)?(?:\d+)?([a-z0-9]+[0-9]{5})/')
-        cids = list(filter(lambda x: prog.search(x).group(1) == self.get_cid().lower(), results))
-        self.log(cids)
-        if len(set(cids)) != 1:
-            self.log('no exact matched with keyword:({})'.format(self.get_cid().lower()))
-            self.log('found urls {}'.format(results))
-            return
+        self.log('found urls {}'.format(results))
+        if len(results) > 1:
+            prog = re.compile(r'id=(?:h_)?(?:\d+)?([a-z0-9]+[0-9]{3,5})(?:.+)?/')
+            #cid = self.keyword.replace('-', '').lower()
+            cid = self.get_cid().lower()
+            urls = list(filter(lambda x: prog.search(x).group(1) == cid, results))
+            self.log(urls)
+            if len(set(urls)) != 1:
+                self.log('no exact matched with keyword:({})'.format(self.get_cid().lower()))
+                return
+        else:
+            urls = results
 
-        for url in cids:
+        for url in urls:
             self.log(url)
             return scrapy.Request(url=url,
                 callback = self.parse_search_page,

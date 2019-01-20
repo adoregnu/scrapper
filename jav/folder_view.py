@@ -20,6 +20,7 @@ class FolderList(QListView):
             self.upDir()
         elif event.key() in [Qt.Key_Up, Qt.Key_Down]:
             self.clicked.emit(self.currentIndex())
+        #self.scrollTo(self.currentIndex())
 
     def onListDoubleClicked(self, index):
         finfo = self.model().fileInfo(index)
@@ -88,3 +89,19 @@ class FolderView(QWidget):
 
     def getSelectedIndexes(self):
         return self.folderList.selectedIndexes()
+
+    def playFile(self):
+        index = self.folderList.currentIndex()
+        if not index.isValid():
+            return
+
+        import glob
+        exts = ('*.mp4', '*.mkv', '*.avi', '*.wmv')
+        files = []
+        path = self.model.filePath(index)
+        for ext in exts:
+            files.extend(glob.glob('%s/%s'%(path, ext)))
+        if not len(ext): return
+
+        files.sort()
+        os.startfile(files[0])

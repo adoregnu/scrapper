@@ -75,11 +75,9 @@ class ScrapperGui(QMainWindow):
         action.triggered.connect(self.cw.saveAll)
         self.toolbar.addAction(action)
 
-        '''
-        action = QAction(QIcon('res/controls-editor-refresh@128px.png'), 'Refresh', self)
-        action.triggered.connect(self.cw.refresh)
+        action = QAction(QIcon('res/photo-and-video-film-play@128px.png'), 'Play', self)
+        action.triggered.connect(self.cw.fileView.playFile)
         self.toolbar.addAction(action)
-        '''
 
         self.scrapToolbar = self.addToolBar('Scrapper')
         self.sites = QComboBox(self)

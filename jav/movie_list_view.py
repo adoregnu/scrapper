@@ -11,6 +11,7 @@ class FilterProxyModel(QSortFilterProxyModel):
         super().__init__()
 
     def filterAcceptsRow(self, row, parent):
+        #print('filterAcceptsRow')
         if not parent.isValid():
             return False
 
