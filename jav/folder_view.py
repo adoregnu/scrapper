@@ -101,7 +101,7 @@ class FolderView(QWidget):
         path = self.model.filePath(index)
         for ext in exts:
             files.extend(glob.glob('%s/%s'%(path, ext)))
-        if not len(ext): return
+        if not len(files) < 1: return
 
         files.sort()
         os.startfile(files[0])

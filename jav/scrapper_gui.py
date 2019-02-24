@@ -79,6 +79,10 @@ class ScrapperGui(QMainWindow):
         action.triggered.connect(self.cw.fileView.playFile)
         self.toolbar.addAction(action)
 
+        action = QAction(QIcon('res/miscellaneous-handcuffs@128px.png'), 'Switch View', self)
+        action.triggered.connect(self.cw.listView.switchModel)
+        self.toolbar.addAction(action)
+
         self.scrapToolbar = self.addToolBar('Scrapper')
         self.sites = QComboBox(self)
         site = self.scrapperConf.get('site', 'javlibrary')

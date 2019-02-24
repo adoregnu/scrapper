@@ -37,15 +37,24 @@ class JavFree(scrapy.Spider, Common):
 
         res = response.css('div.entry-content > p::text').extract()
         line = ' '.join(res)
-        m = re.search(r'(?:配信日|公開日|発売日):? (\d{4})(?:\D+)(\d{2})(?:\D+)(\d{2})', line)
-        il.add_value('releasedate', '-'.join(m.groups()))
+        m = re.search(r'(?:配信日|公開日|発売日|販売日|更新日):? (\d{4})(?:\D+)(\d{2})(?:\D+)(\d{2})', line)
+        if m:
+            il.add_value('releasedate', '-'.join(m.groups()))
+
         tags = response.css('div.entry-tags > span > a[rel="tag"]::text').extract()
+        m = re.search(r'出演: ?(\w+)', line)
+        if m:
+            jname = m.group(1)
+            #self.log(m.groups())
+        else:
+            jname = tags[0]
+
         il.add_value('studio', tags[-1])
         il.add_value('id', self.keyword)
 
         self.log(tags)
         if len(tags) > 1:
-            dmmurl = 'http://www.dmm.co.jp/search/=/searchstr={} 単体/'.format(tags[0])
+            dmmurl = 'http://www.dmm.co.jp/search/=/searchstr={} 単体/'.format(jname)
             self.log(dmmurl)
             yield scrapy.Request(
                     url=dmmurl,

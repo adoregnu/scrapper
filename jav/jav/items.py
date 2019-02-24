@@ -24,3 +24,13 @@ class JavItem(scrapy.Item):
     genre = scrapy.Field()
     thumb = scrapy.Field()
     rating = scrapy.Field()
+
+class Article(scrapy.Item):
+    id = scrapy.Field()
+    cover_img_name = scrapy.Field()
+    cover_img_url = scrapy.Field()
+    file_name = scrapy.Field()
+    file_urls = scrapy.Field()
+    files = scrapy.Field()
+    image_urls = scrapy.Field()
+    images = scrapy.Field()

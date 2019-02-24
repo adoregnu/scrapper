@@ -16,7 +16,21 @@ class MovieInfoModel(QAbstractItemModel):
     def setColumnFilter(self, filters):
         self.columnFilter = filters
 
+    def adjustActor(self, movieinfo):
+        from jav.actor_map import adjust_actor
+        actors = movieinfo['actor']
+        if isinstance(actors, str):
+            movieinfo['actor'] = adjust_actor(actors)
+        elif isinstance(actors, list):
+            for actor in actors:
+                actor['name'] = adjust_actor(actor['name'])
+        elif isinstance(actors, dict):
+                actors['name'] = adjust_actor(actors['name'])
+
     def setMovieInfo(self, movieinfo):
+        if movieinfo.get('actor'):
+            self.adjustActor(movieinfo)
+
         if not self.columnFilter:
             self.movieInfo = movieinfo
             return

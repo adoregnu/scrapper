@@ -54,9 +54,8 @@ class SpiderR18(scrapy.Spider, Common):
             cid = self.get_cid().lower()
             urls = list(filter(lambda x: prog.search(x).group(1) == cid, results))
             self.log(urls)
-            if len(set(urls)) != 1:
+            if len(set(urls)) > 0:
                 self.log('no exact matched with keyword:({})'.format(self.get_cid().lower()))
-                return
         else:
             urls = results
 

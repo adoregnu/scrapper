@@ -69,11 +69,14 @@ class CentralWidget(QWidget):
 
     def updateFromScrapy(self, info):
         self.infoView.clearMovieInfo(False)
-
-        donotcrop = ['heyzo','1pondo', 'Carib', 'caribpr', 'pacopacomama', 'nanpatv']
+        configScrapper = self.globalConfig['Scrapper']
+        donotcrop = []
+        if configScrapper.get('studioSkipCrop'):
+            donotcrop = configScrapper['studioSkipCrop'].split(',')
+            print(donotcrop)
         try :
             info['fanart'] = info['thumb']
-            if info['studio'] in donotcrop:
+            if not info.get('studio') or info['studio'] in donotcrop:
                 info['poster'] = info['thumb']
             else:
                 info['poster'] = info['thumb'].cropLeft()
