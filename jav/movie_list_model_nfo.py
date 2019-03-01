@@ -21,13 +21,8 @@ class FilterProxyModel(QSortFilterProxyModel):
         if not fileInfo.isDir():
             return False
 
-        #path = smodel.filePath(index)
         path = fileInfo.absoluteFilePath()
         rpath = smodel.rootPath()
-        #print('filter: root:%s, path:%s'%(rpath, path))
-        #if parent == smodel.index(smodel.rootPath()):
-        #    return super().filterAcceptsRow(row, parent)
-        #if smodel.rootPath().startswith(path):
         if rpath == path or rpath.startswith(path):
             return True
 
@@ -45,10 +40,6 @@ class MovieListDelegate(QStyledItemDelegate):
         proxyModel = QModelIndex.model()
         index = proxyModel.mapToSource(QModelIndex)
         model = QModelIndex.model().sourceModel()
-        #index = QModelIndex
-        #model = QModelIndex.model()
-        #print('paint:%s'%index.data(Qt.DisplayRole))
-        #filepath = model.fileInfo(index).absoluteFilePath()
         filepath = model.filePath(index)
         try :
             _, _, files = next(os.walk(filepath))

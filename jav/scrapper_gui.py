@@ -23,8 +23,7 @@ class ScrapperGui(QMainWindow):
         self.config.read('scrapper.ini')
         self.initConfig()
 
-        self.cw = CentralWidget(self.config)
-        self.setCentralWidget(self.cw)
+        self.setCentralWidget(CentralWidget(self.config))
         self.createToolbar()
         self.createMenu()
         self.setGeometry(self.left, self.top, self.width, self.height)
@@ -50,7 +49,7 @@ class ScrapperGui(QMainWindow):
         if dialog.exec_() == QDialog.Accepted:
             directory = dialog.selectedFiles()[0]
             #print(directory)
-            self.cw.changeDir(directory)
+            self.centralWidget().changeDir(directory)
 
     def setSite(self, site):
         #print(site)
@@ -60,7 +59,7 @@ class ScrapperGui(QMainWindow):
         self.toolbar = self.addToolBar('Files')
 
         action = QAction(QIcon('res/documents-folder-up@128px.png'), 'Up', self)
-        action.triggered.connect(self.cw.upDir)
+        action.triggered.connect(self.centralWidget().upDir)
         self.toolbar.addAction(action)
 
         action = QAction(QIcon('res/documents-search-folder@128px.png'), 'Browse', self)
@@ -68,25 +67,25 @@ class ScrapperGui(QMainWindow):
         self.toolbar.addAction(action)
 
         action = QAction(QIcon('res/documents-folder-download@128px.png'), 'Scrap', self)
-        action.triggered.connect(self.cw.scrap)
+        action.triggered.connect(self.centralWidget().scrap)
         self.toolbar.addAction(action)
 
         action = QAction(QIcon('res/controls-editor-save@128px.png'), 'Save', self)
-        action.triggered.connect(self.cw.saveAll)
+        action.triggered.connect(self.centralWidget().saveAll)
         self.toolbar.addAction(action)
 
         action = QAction(QIcon('res/photo-and-video-film-play@128px.png'), 'Play', self)
-        action.triggered.connect(self.cw.fileView.playFile)
+        action.triggered.connect(self.centralWidget().fileView.playFile)
         self.toolbar.addAction(action)
 
         action = QAction(QIcon('res/miscellaneous-handcuffs@128px.png'), 'Switch View', self)
-        action.triggered.connect(self.cw.listView.switchModel)
+        action.triggered.connect(self.centralWidget().listView.switchModel)
         self.toolbar.addAction(action)
 
         self.scrapToolbar = self.addToolBar('Scrapper')
         self.sites = QComboBox(self)
         site = self.scrapperConf.get('site', 'javlibrary')
-        sites = ['javlibrary', 'avwiki', 'dmm', 'r18', 'mgstage', 'javbus', 'javfree']
+        sites = self.scrapperConf['siteList'].split(',')
         self.sites.insertItems(1, sites)
         self.sites.setCurrentText(site)
         self.sites.currentTextChanged.connect(self.setSite)
@@ -98,7 +97,7 @@ class ScrapperGui(QMainWindow):
         #filemenu.addToolBar()
 
         action = QAction('Rename files', self)
-        action.triggered.connect(self.cw.fileRenameTool)
+        action.triggered.connect(self.centralWidget().fileRenameTool)
         filemenu.addAction(action)
 
 if __name__ == '__main__':

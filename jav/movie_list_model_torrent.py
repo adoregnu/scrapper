@@ -3,8 +3,8 @@ from PyQt5.QtGui import QPainter, QImage, QPixmap, QBrush, QWindow
 from PyQt5.QtCore import Qt, QSize, QRect, QSortFilterProxyModel, QPoint, pyqtSignal, QModelIndex
 from PyQt5.QtWidgets import QListView, QStyledItemDelegate, QStyle
 
-ITEM_WIDTH = 800
-ITEM_HEIGHT = 500
+ITEM_WIDTH = 500
+ITEM_HEIGHT = 300
 
 class FilterProxyModel(QSortFilterProxyModel):
     def __init__(self):
@@ -21,25 +21,17 @@ class FilterProxyModel(QSortFilterProxyModel):
         if not fileInfo.isDir():
             return False
 
-        #path = smodel.filePath(index)
         path = fileInfo.absoluteFilePath()
         rpath = smodel.rootPath()
-        #print('filter: root:%s, path:%s'%(rpath, path))
-        #if parent == smodel.index(smodel.rootPath()):
-        #    return super().filterAcceptsRow(row, parent)
-        #if smodel.rootPath().startswith(path):
         if rpath == path or rpath.startswith(path):
             return True
 
         return len(glob.glob('%s/*.torrent'%(path))) > 0
-        #print ('root:{}, path:{} : {}'.format(rpath, path, exists))
-        #return exists
 
     def startDownload(self, index):
         from qbittorrent import Client
         qb = Client('http://bsyoo.me:9090')
         qb.login('admin', 's82ohigh')
-        #torrents = qb.torrents()
         try:
             fileInfo = self.sourceModel().fileInfo(index)
             path = fileInfo.absoluteFilePath()
@@ -58,10 +50,6 @@ class MovieListDelegate(QStyledItemDelegate):
         proxyModel = QModelIndex.model()
         index = proxyModel.mapToSource(QModelIndex)
         model = QModelIndex.model().sourceModel()
-        #index = QModelIndex
-        #model = QModelIndex.model()
-        #print('paint:%s'%index.data(Qt.DisplayRole))
-        #filepath = model.fileInfo(index).absoluteFilePath()
         filepath = model.filePath(index)
         try :
             _, _, files = next(os.walk(filepath))

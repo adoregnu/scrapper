@@ -31,10 +31,10 @@ class MovieListView(QListView):
 
     def initNfoModel(self):
         import movie_list_model_nfo as nm 
-        self.createModel(nm)
-
         self.setViewMode(QListView.IconMode)
         self.setMovement(QListView.Static)
+        
+        self.createModel(nm)
 
     def initTorrentModel(self):
         import movie_list_model_torrent as tm
@@ -60,6 +60,7 @@ class MovieListView(QListView):
 
     def onDirectoryLoaded(self, newpath):
         #print('onDirectoryLoaded %s\n'%newpath)
+        self.proxy.invalidate()
         self.updateRoot(newpath)
 
     def updateRoot(self, path = None):

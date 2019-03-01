@@ -11,10 +11,10 @@ class JavBus(scrapy.Spider, Common):
     #}
 
     def start_requests(self):
-        url = 'http://www.actionjav.com/results_title.cfm?sortby=pub_idu&direction=ASC&searchterm='
+        url = 'https://www.javbus.com/ja/uncensored/search/%s&type=1'
         kws = self.prepare_request()
         for k in kws:
-            yield scrapy.Request(url='%s%s'%(url, k.replace('-','')), callback=self.parse_search)
+            yield scrapy.Request(url=url % k, callback=self.parse_search)
 
     def parse_search(self, response):
         self.save_html(response.body)

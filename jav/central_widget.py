@@ -92,8 +92,9 @@ class CentralWidget(QWidget):
             self.updateFromScrapy(movieinfo)
 
     def onScrapDone(self, _, id):
-        self.onFoundMovie(self.crawledMovieInfo)
-        self.crawledMovieInfo = None
+        if self.crawledMovieInfo:
+            self.onFoundMovie(self.crawledMovieInfo)
+            self.crawledMovieInfo = None
 
     # don't do anything related to Qt UI in scrapy signal. it doesn't work.
     def onSpiderClosed(self, spider):
