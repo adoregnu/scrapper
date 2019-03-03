@@ -8,6 +8,8 @@ from folder_view import FolderView
 import jav.utils as utils
 
 class CentralWidget(QWidget):
+    crawledMovieInfo = None
+
     def __init__(self, config):
         super().__init__()
 
@@ -15,6 +17,7 @@ class CentralWidget(QWidget):
         if not 'FolderView' in config.sections():
             config.add_section('y')
 
+        self.scrapperConfig = self.globalConfig['Scrapper']
         mainLayout = QHBoxLayout()
         mainLayout.setContentsMargins(3, 3, 3, 3)
 
@@ -69,10 +72,9 @@ class CentralWidget(QWidget):
 
     def updateFromScrapy(self, info):
         self.infoView.clearMovieInfo(False)
-        configScrapper = self.globalConfig['Scrapper']
         donotcrop = []
-        if configScrapper.get('studioSkipCrop'):
-            donotcrop = configScrapper['studioSkipCrop'].split(',')
+        if self.scrapperConfig.get('studios_skipping_crop'):
+            donotcrop = self.scrapperConfig['studios_skipping_crop'].split(',')
             print(donotcrop)
         try :
             info['fanart'] = info['thumb']
@@ -91,7 +93,7 @@ class CentralWidget(QWidget):
         elif isinstance(movieinfo, dict):
             self.updateFromScrapy(movieinfo)
 
-    def onScrapDone(self, _, id):
+    def onScrapDone(self, _):
         if self.crawledMovieInfo:
             self.onFoundMovie(self.crawledMovieInfo)
             self.crawledMovieInfo = None
@@ -100,20 +102,29 @@ class CentralWidget(QWidget):
     def onSpiderClosed(self, spider):
         #import pprint as pp
         #pp.pprint(spider.movieinfo)
-        self.crawledMovieInfo = spider.movieinfo
+        try:
+            self.crawledMovieInfo = spider.movieinfo
+        except:
+            self.crawledMovieInfo = None
 
-    def scrap(self):
+    def runCrawler(self, **kw):
         from scrapy import signals
-        scrapper_conf = self.globalConfig['Scrapper']
+        crawler = self.runner.create_crawler(self.scrapperConfig.get('site', 'r18'))
+        crawler.signals.connect(self.onSpiderClosed, signals.spider_closed)
+        deferd = self.runner.crawl(crawler, **kw)
+        deferd.addBoth(self.onScrapDone)
+
+    def scrap(self, **kw):
+        if kw:
+            kw['outdir'] = self.fileView.rootPath()
+            self.runCrawler(**kw)
+            return
+
         selected = self.fileView.getSelectedIndexes()
         for index in selected:
             path = self.fileView.getPath(index)
             cid = os.path.basename(path)
-            #path = '/'.join(path.split('/')[0:-1])
-            crawler = self.runner.create_crawler(scrapper_conf.get('site', 'r18'))
-            crawler.signals.connect(self.onSpiderClosed, signals.spider_closed)
-            deferd = self.runner.crawl(crawler, keyword=cid, outdir=path)
-            deferd.addBoth(self.onScrapDone, index)
+            self.runCrawler(**{'keyword':cid, 'outdir':path})
 
     def saveAll(self):
         self.infoView.saveMovieInfo()
@@ -130,6 +141,3 @@ class CentralWidget(QWidget):
         from rename_tool import FileRenameDialog
         dlg = FileRenameDialog(config.get('currdir', ''), self)
         dlg.exec_()
-
-    def refresh(self):
-        self.listView.refresh()

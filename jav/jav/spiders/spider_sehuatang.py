@@ -16,15 +16,17 @@ class Sehuatang(scrapy.Spider, Common):
         'FILES_STORE' : 'sehuatang',
         'IMAGES_STORE' : 'sehuatang'
     }
-    num_page = 1
+    num_page = 0
+    stop_id = None
 
     def start_requests(self):
-        import datetime
-        dt = datetime.datetime.now()
-        self.outdir = 'g:/tmp/%s/sehuatang' % dt.strftime('%Y-%m-%d')
-        os.makedirs(self.outdir, exist_ok=True)
-        self.url = 'https://www.sehuatang.org/'
-        yield scrapy.Request(url=self.url, callback = self.parse_main)
+        self.outdir = '%s/%s'%(self.outdir, self.name)
+        self.log('num_page:{}, outdir:{}, stop_id:{}'.format(
+            self.num_page, self.outdir, self.stop_id))
+
+        if self.num_page:
+            self.url = 'https://www.sehuatang.org/'
+            yield scrapy.Request(url=self.url, callback = self.parse_main)
 
     def parse_main(self, response):
         sensored = response.xpath('//a[contains(., "亚洲有码原创")]/@href').extract_first()

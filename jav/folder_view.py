@@ -1,16 +1,23 @@
 import os
 import glob
 
-from PyQt5.QtWidgets import QFileSystemModel, QListView, QWidget, QVBoxLayout, QLineEdit
+from PyQt5.QtWidgets import QFileSystemModel, QListView, QWidget, QVBoxLayout, QLineEdit, QMenu
 from PyQt5.QtCore import Qt, pyqtSignal, pyqtSlot 
 
 class FolderList(QListView):
+    prevPath = []
     def __init__(self, config, parent=None):
         super().__init__(parent)
         self.config = config
         self.setWindowTitle("Dir View")
+        self.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.customContextMenuRequested.connect(self.onContextMenu)
         self.clicked.connect(self.onListClicked)
         self.doubleClicked.connect(self.onListDoubleClicked)
+
+        self.contextMenu = QMenu()
+        delAction = self.contextMenu.addAction("Delete")
+        delAction.triggered.connect(self.onDelete)
 
     def keyPressEvent(self, event):
         super().keyPressEvent(event)
@@ -20,7 +27,21 @@ class FolderList(QListView):
             self.upDir()
         elif event.key() in [Qt.Key_Up, Qt.Key_Down]:
             self.clicked.emit(self.currentIndex())
-        #self.scrollTo(self.currentIndex())
+
+    def onContextMenu(self, point):
+        self.contextMenu.exec_(self.viewport().mapToGlobal(point))
+
+    def onDelete(self):
+        import shutil
+        index = self.currentIndex()
+        if not index.isValid():
+            return
+
+        try:
+            f = self.model().fileInfo(index)
+            shutil.rmtree(f.absoluteFilePath())
+        except Exception as e:
+            print(e)
 
     def onListDoubleClicked(self, index):
         finfo = self.model().fileInfo(index)
@@ -28,6 +49,7 @@ class FolderList(QListView):
             return
 
         path = finfo.absoluteFilePath()
+        self.prevPath.append(index)
         self.changeDir(path)
 
     def onListClicked(self, index):
@@ -45,6 +67,7 @@ class FolderList(QListView):
     def changeDir(self, path):
         self.setRootIndex(self.model().setRootPath(path))
         self.config['currdir'] = path
+        self.scrollTo(self.currentIndex())
 
     def upDir(self):
         tmp = self.config['currdir'].split('/')
@@ -54,6 +77,8 @@ class FolderList(QListView):
             self.changeDir('')
         else:
             self.changeDir('/'.join(tmp[0:-1]))
+        if len(self.prevPath):
+            self.setCurrentIndex(self.prevPath.pop())
 
 class FolderView(QWidget):
     movieFound = pyqtSignal(list)
@@ -87,6 +112,9 @@ class FolderView(QWidget):
         if not index: index = self.folderList.currentIndex()
         return self.model.filePath(index)
 
+    def rootPath(self):
+        return self.model.rootPath()
+
     def getSelectedIndexes(self):
         return self.folderList.selectedIndexes()
 
@@ -99,6 +127,7 @@ class FolderView(QWidget):
         exts = ('*.mp4', '*.mkv', '*.avi', '*.wmv')
         files = []
         path = self.model.filePath(index)
+        #print(path)
         for ext in exts:
             files.extend(glob.glob('%s/%s'%(path, ext)))
         if len(files) < 1: return

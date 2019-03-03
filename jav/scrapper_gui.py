@@ -1,18 +1,45 @@
 import os, sys
 
-from PyQt5.QtWidgets import (QApplication, QMainWindow, QMenu, QMenuBar, QDialog,
-    QAction, QActionGroup, QFileDialog, QToolButton, QComboBox)
+from PyQt5.QtWidgets import (QApplication, QMainWindow, QMenu, QMenuBar, QDialog, QHBoxLayout,
+    QAction, QActionGroup, QFileDialog, QToolButton, QComboBox, QLineEdit, QWidget, QLabel,
+    QSpacerItem, QSizePolicy)
 
 from PyQt5.QtGui import QIcon, QFont
 from PyQt5.QtCore import Qt, QUrl
 
 from central_widget import CentralWidget
 
+class ArgsWidget(QWidget):
+    def __init__(self, parent = None):
+        super().__init__(parent)
+        layout = QHBoxLayout()
+        layout.addItem(QSpacerItem(10, 1, QSizePolicy.Fixed, QSizePolicy.Expanding))
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.addWidget(QLabel('Num Pages:'))
+        self.editPages = QLineEdit()
+        layout.addWidget(self.editPages)
+        layout.addWidget(QLabel('Stop Id:'))
+        self.editStopId = QLineEdit()
+        layout.addWidget(self.editStopId)
+        self.setMaximumWidth(180)
+        self.setLayout(layout)
+
+    def reset(self):
+        self.editPages.setText('1')
+        self.editStopId.setText('')
+
+    def getNumPages(self):
+        return self.editPages.text()
+
+    def getStopId(self):
+        return self.editStopId.text()
+
 class ScrapperGui(QMainWindow):
     left = 100
     top = 100
     width = 1040
     height = 720  
+    argsWidget = None
 
     def __init__(self, reactor):
         super().__init__()
@@ -54,6 +81,26 @@ class ScrapperGui(QMainWindow):
     def setSite(self, site):
         #print(site)
         self.scrapperConf['site'] = site
+        sitesNeededArgs = self.scrapperConf.get('sites_needed_args', [])
+        self.showArgsWidget(site in sitesNeededArgs)
+
+    def showArgsWidget(self, bShow):
+        aw = self.argsWidget
+        if not aw:
+            aw = ArgsWidget()
+            aw.action = self.scrapToolbar.addWidget(aw)
+            self.argsWidget = aw
+
+        aw.action.setVisible(bShow)
+        if bShow: aw.reset()
+
+    def scrap(self):
+        aw = self.argsWidget
+        args = {}
+        if aw.action.isVisible():
+            args['num_page'] = aw.getNumPages()
+            args['stop_id'] = aw.getStopId()
+        self.centralWidget().scrap(**args)
 
     def createToolbar(self):
         self.toolbar = self.addToolBar('Files')
@@ -67,7 +114,7 @@ class ScrapperGui(QMainWindow):
         self.toolbar.addAction(action)
 
         action = QAction(QIcon('res/documents-folder-download@128px.png'), 'Scrap', self)
-        action.triggered.connect(self.centralWidget().scrap)
+        action.triggered.connect(self.scrap)
         self.toolbar.addAction(action)
 
         action = QAction(QIcon('res/controls-editor-save@128px.png'), 'Save', self)
@@ -85,11 +132,12 @@ class ScrapperGui(QMainWindow):
         self.scrapToolbar = self.addToolBar('Scrapper')
         self.sites = QComboBox(self)
         site = self.scrapperConf.get('site', 'javlibrary')
-        sites = self.scrapperConf['siteList'].split(',')
+        sites = self.scrapperConf['sites'].split(',')
         self.sites.insertItems(1, sites)
         self.sites.setCurrentText(site)
         self.sites.currentTextChanged.connect(self.setSite)
         self.scrapToolbar.addWidget(self.sites)
+        self.setSite(site)
 
     def createMenu(self):
         menubar = self.menuBar()

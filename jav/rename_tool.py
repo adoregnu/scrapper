@@ -2,8 +2,10 @@ import os
 import traceback
 
 from PyQt5.QtWidgets import (QHBoxLayout, QVBoxLayout, QLabel, QPushButton, QDialog, QLineEdit,
-    QListWidget, QTableWidget, QTableWidgetItem, QHeaderView, QAbstractItemView)
+    QListWidget, QTableWidget, QTableWidgetItem, QHeaderView, QAbstractItemView, QMenu
+)
 from PyQt5.QtGui import QStandardItemModel
+from PyQt5.QtCore import Qt
 
 class FileList(QTableWidget):
     def __init__(self, files, parent=None):
@@ -21,14 +23,27 @@ class FileList(QTableWidget):
         '''
         self.setMinimumWidth(500)
         self.setStyleSheet(stylesheet)
+        #self.setContextMenuPolicy(Qt.CustomContextMenu) 
+        #self.customContextMenuRequested.connect(self.onContextMenu)
 
         self.setHorizontalHeaderLabels(['Old', 'New'])
         self.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
         self.verticalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
         self.setSelectionMode(QAbstractItemView.NoSelection)
 
+        self.contextMenu = QMenu()
+        delAction = self.contextMenu.addAction("Delete Row")
+        delAction.triggered.connect(self.onDelete)
+
         for i, file in enumerate(files):
             self.setItem(i, 0, QTableWidgetItem(os.path.basename(file)))
+
+    def contextMenuEvent(self, event):
+        self.contextMenu.exec_(self.viewport().mapToGlobal(event.pos()))
+
+    def onDelete(self):
+        #print()
+        self.removeRow(self.currentRow())
 
     def previewRename(self):
         import re
@@ -58,19 +73,19 @@ class FileList(QTableWidget):
     def doRename(self):
         import shutil
         index = 0
-        while self.rowCount() > 0:
-            srcf = self.item(index, 0).text()
-            dstf = self.item(index, 1).text()
-            if not dstf: continue
-            srcp = '/'.join([self.parent().path, srcf])
-            dstp = '/'.join([self.parent().path, dstf])
+        while self.rowCount() > 0 and self.rowCount() != index:
             try:
+                srcf = self.item(index, 0).text()
+                dstf = self.item(index, 1).text()
+                srcp = '/'.join([self.parent().path, srcf])
+                dstp = '/'.join([self.parent().path, dstf])
                 os.makedirs(os.path.dirname(dstp), exist_ok=True)
                 #print('%s => %s'%(srcp, dstp))
-                shutil.move(srcp ,dstp)
+                shutil.move(srcp, dstp)
                 self.removeRow(index)
-            except:
+            except Exception as e:
                 index += 1
+                print(index, e)
 
 class FileRenameDialog(QDialog):
     def __init__(self, path, parent=None):
@@ -110,12 +125,12 @@ class FileRenameDialog(QDialog):
         self.previewBtn.clicked.connect(self.fileTable.previewRename)
         self.renameBtn = QPushButton('Rename')
         self.renameBtn.clicked.connect(self.fileTable.doRename)
-        self.cancelBtn = QPushButton('Cancel')
-        self.cancelBtn.clicked.connect(self.close)
+        #self.cancelBtn = QPushButton('Cancel')
+        #self.cancelBtn.clicked.connect(self.close)
         innerBottom.addStretch()
         innerBottom.addWidget(self.previewBtn)
         innerBottom.addWidget(self.renameBtn)
-        innerBottom.addWidget(self.cancelBtn)
+        #innerBottom.addWidget(self.cancelBtn)
         layout.addLayout(innerBottom)
 
         self.setLayout(layout)

@@ -22,7 +22,7 @@ class MovieListView(QListView):
     def createModel(self, m):
         model = self.listMode[self.listModeIndex]
         if not model['model']:
-            model['model'] = m.FilterProxyModel()
+            model['model'] = m.FilterProxyModel(self.globalConfig['qbtorrent'])
             model['model'].setDynamicSortFilter(True)
             model['model'].setSourceModel(self.model)
             model['deletage'] = m.MovieListDelegate()
@@ -57,6 +57,7 @@ class MovieListView(QListView):
             self.movieDoubleClicked.emit(srcIndex)
         else:
             self.proxy.startDownload(srcIndex)
+            self.refresh()
 
     def onDirectoryLoaded(self, newpath):
         #print('onDirectoryLoaded %s\n'%newpath)

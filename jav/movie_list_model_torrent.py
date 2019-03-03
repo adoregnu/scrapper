@@ -7,8 +7,9 @@ ITEM_WIDTH = 500
 ITEM_HEIGHT = 300
 
 class FilterProxyModel(QSortFilterProxyModel):
-    def __init__(self):
+    def __init__(self, config):
         super().__init__()
+        self.config = config
 
     def filterAcceptsRow(self, row, parent):
         #print('filterAcceptsRow')
@@ -26,18 +27,23 @@ class FilterProxyModel(QSortFilterProxyModel):
         if rpath == path or rpath.startswith(path):
             return True
 
+        if os.path.exists('%s/.skip'%path):
+            return False
+
         return len(glob.glob('%s/*.torrent'%(path))) > 0
 
     def startDownload(self, index):
         from qbittorrent import Client
-        qb = Client('http://bsyoo.me:9090')
-        qb.login('admin', 's82ohigh')
+        qb = Client(self.config['url'])
+        qb.login(self.config['id'], self.config['password'])
         try:
             fileInfo = self.sourceModel().fileInfo(index)
             path = fileInfo.absoluteFilePath()
             torrents = glob.glob('%s/*.torrent'%path)
-            with open(torrents[0], 'rb') as f:
-                qb.download_from_file(f)
+            for t in torrents:
+                with open(t, 'rb') as f:
+                    qb.download_from_file(f)
+                open('%s/.skip'%path, 'a').close()
         except Exception as e:
             print(e)
 

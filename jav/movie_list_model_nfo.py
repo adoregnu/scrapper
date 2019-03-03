@@ -7,7 +7,7 @@ ITEM_WIDTH = 150
 ITEM_HEIGHT = 200
 
 class FilterProxyModel(QSortFilterProxyModel):
-    def __init__(self):
+    def __init__(self, config):
         super().__init__()
 
     def filterAcceptsRow(self, row, parent):
