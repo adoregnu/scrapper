@@ -3,7 +3,6 @@ import scrapy
 import traceback
 from .common import Common 
 from jav.items import JavItem
-
 class JavLibrary(scrapy.Spider, Common):
     name = "javlibrary"
     custom_settings = {
@@ -25,7 +24,7 @@ class JavLibrary(scrapy.Spider, Common):
 
         id = response.meta['id'].upper()
         exactMatch = [v for v in videos if v.css('div.id::text').extract_first().upper() == id]
-        if len(exactMatch) == 1:
+        if len(exactMatch) > 0:
             url = response.urljoin(exactMatch[0].css('a::attr(href)').extract_first())
             self.log('url:%s' % url)
             return scrapy.Request(url=url)

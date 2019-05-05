@@ -23,14 +23,14 @@ USER_AGENT='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML,
 ROBOTSTXT_OBEY = False
 
 # Configure maximum concurrent requests performed by Scrapy (default: 16)
-#CONCURRENT_REQUESTS = 32
+CONCURRENT_REQUESTS = 5
 
 # Configure a delay for requests for the same website (default: 0)
 # See https://doc.scrapy.org/en/latest/topics/settings.html#download-delay
 # See also autothrottle settings and docs
-#DOWNLOAD_DELAY = 3
+#DOWNLOAD_DELAY = 0.5
 # The download delay setting will honor only one of:
-#CONCURRENT_REQUESTS_PER_DOMAIN = 16
+#CONCURRENT_REQUESTS_PER_DOMAIN = 10
 #CONCURRENT_REQUESTS_PER_IP = 16
 
 # Disable cookies (enabled by default)
@@ -41,8 +41,9 @@ ROBOTSTXT_OBEY = False
 
 # Override the default request headers:
 DEFAULT_REQUEST_HEADERS = {
+   'Connection' : 'keep-alive',
    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
-   'Accept-Language': 'en-US,en;q=0.9,ko;q=0.8',
+   'Accept-Language': 'en-US,en;q=0.9',
 }
 
 # Enable or disable spider middlewares
@@ -58,6 +59,7 @@ DEFAULT_REQUEST_HEADERS = {
 #}
 DOWNLOADER_MIDDLEWARES = {
     'scrapy_cloudflare_middleware.middlewares.CloudFlareMiddleware': 560,
+    #'scrapy_selenium.SeleniumMiddleware': 800
 }
 
 
@@ -93,3 +95,7 @@ DOWNLOADER_MIDDLEWARES = {
 #HTTPCACHE_DIR = 'httpcache'
 #HTTPCACHE_IGNORE_HTTP_CODES = [302]
 #HTTPCACHE_STORAGE = 'scrapy.extensions.httpcache.FilesystemCacheStorage'
+#from shutil import which
+#SELENIUM_DRIVER_NAME = 'chrome'
+#SELENIUM_DRIVER_EXECUTABLE_PATH = which('chromedriver')
+#SELENIUM_DRIVER_ARGUMENTS=['--headless', '--window-size=1920x1080']  # '--headless' if using chrome instead of firefox

@@ -2,7 +2,6 @@ import os
 import scrapy
 import traceback
 from .common import Common
-#from jav.items import JavItem
 from jav.items import Article
 
 class Sehuatang(scrapy.Spider, Common):
@@ -21,6 +20,7 @@ class Sehuatang(scrapy.Spider, Common):
 
     def start_requests(self):
         self.outdir = '%s/%s'%(self.outdir, self.name)
+        self.num_page = int(self.num_page)
         self.log('num_page:{}, outdir:{}, stop_id:{}'.format(
             self.num_page, self.outdir, self.stop_id))
 
@@ -51,7 +51,7 @@ class Sehuatang(scrapy.Spider, Common):
         #self.save_html(response.body, 'article')
         from scrapy.loader import ItemLoader
         il = ItemLoader(item = Article(), response=response)
-        il.add_xpath('id', '//span[@id="thread_subject"]/text()', re=r'([a-z0-9\-_]+)')
+        il.add_xpath('id', '//span[@id="thread_subject"]/text()', re=r'([a-zA-Z0-9\-_]+)')
         il.add_xpath('file_name', '//a[contains(., ".torrent")]/text()')
         il.add_xpath('file_urls', '//a[contains(., ".torrent")]/@href')
         il.add_xpath('image_urls', '//td[contains(@id, "postmessage_")]//img[contains(@id, "aimg_")]/@file')

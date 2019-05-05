@@ -47,6 +47,12 @@ class FilterProxyModel(QSortFilterProxyModel):
         except Exception as e:
             print(e)
 
+    def markDownloaded(self, index):
+        fileInfo = self.sourceModel().fileInfo(index)
+        path = fileInfo.absoluteFilePath()
+        open('%s/.skip'%path, 'a').close()
+        #print('%s/.skip'%path)
+
 class MovieListDelegate(QStyledItemDelegate):
     def __init__(self):
         super().__init__()

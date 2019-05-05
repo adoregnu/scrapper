@@ -16,17 +16,17 @@ class BaiHao(scrapy.Spider, Common):
         'FILES_STORE' : 'baihao',
         'IMAGES_STORE' : 'baihao'
     }
-    num_page = 1
+    num_page = 0
 
     def start_requests(self):
         import datetime
         dt = datetime.datetime.now()
         self.outdir = 'g:/tmp/%s/baihao' % dt.strftime('%Y-%m-%d')
-        os.makedirs(self.outdir, exist_ok=True)
-        self.url = 'http://888kf.xyz/'
-        #kws = self.prepare_request()
-        #for k in kws:
-        yield scrapy.Request(url=self.url, callback = self.parse_main)
+        self.num_page = int(self.num_page)
+
+        if self.num_page:
+            self.url = 'http://www.117bt.com/'
+            yield scrapy.Request(url=self.url, callback = self.parse_main)
 
     def parse_main(self, response):
         sensored = response.xpath('//a[contains(., "亚洲有码原创")]/@href').extract_first()

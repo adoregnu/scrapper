@@ -87,14 +87,14 @@ JavDrives = [
     r'd:\Entertain\JAV',
     r'e:\JAV',
     r'f:\JAV',
-    r'g:\JAV'
+    r'g:\JAV',
+    r'h:\JAV'
 ]
 
 # ActorLink.py chname OLD_NAME NEW_NAME
 # ActorLink.py rename OLD_NAME NEW_NAME
 # ActorLink.py adname NAME NEW_NAME
-
-#print(sys.argv)
+print(JavDrives)
 sys.argv.pop(0)
 print(sys.argv)
 for drive in JavDrives:

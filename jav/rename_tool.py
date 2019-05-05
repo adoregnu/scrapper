@@ -80,12 +80,14 @@ class FileList(QTableWidget):
                 srcp = '/'.join([self.parent().path, srcf])
                 dstp = '/'.join([self.parent().path, dstf])
                 os.makedirs(os.path.dirname(dstp), exist_ok=True)
-                #print('%s => %s'%(srcp, dstp))
-                shutil.move(srcp, dstp)
+                print('%s => %s'%(srcp, dstp))
+                if not os.path.exists(dstp):
+                    shutil.move(srcp, dstp)
                 self.removeRow(index)
             except Exception as e:
                 index += 1
                 print(index, e)
+                break
 
 class FileRenameDialog(QDialog):
     def __init__(self, path, parent=None):
@@ -97,7 +99,7 @@ class FileRenameDialog(QDialog):
     def getFileList(self):
         import glob
         exts = ('*.mp4', '*.mkv', '*.avi', '*.wmv', '*.smi',
-            '*.srt', '*.sup', '*.idx', '*.sub')
+            '*.srt', '*.sup', '*.idx', '*.sub', '*.m4v')
         files = []
         for ext in exts:
             files.extend(glob.glob('%s/%s'%(self.path, ext)))

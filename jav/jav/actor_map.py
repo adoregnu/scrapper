@@ -6,7 +6,13 @@ ACTOR_MAP = {
     'Saya Niiyama' : 'Saya Niyama',
     'Miho Tsuno' : 'Miho Tono',
     'Shiori Uehara': 'Yui Uehara',
-    'Anju Minase':'Anju Kaise'
+    'Anju Minase':'Anju Kaise',
+    'Ai Yuuzuki': 'Ai Yuzuki',
+    'Yuuka Minase':'Yuka Minase',
+    'Riri- Houshou':'Riri Hosho',
+    'Miori Saiba' : 'Miori Ayaha',
+    'Ririko Shiina' : 'Kanon Tachibana',
+    'Satomi Sugihara' : 'Kanon Tachibana'
 }
 
 def adjust_actor(name):

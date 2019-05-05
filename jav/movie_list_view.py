@@ -1,6 +1,6 @@
 import os
 from PyQt5.QtCore import Qt, pyqtSignal, QModelIndex
-from PyQt5.QtWidgets import QListView, QAbstractItemView
+from PyQt5.QtWidgets import QListView, QAbstractItemView, QMenu
 
 class MovieListView(QListView):
     movieDoubleClicked = pyqtSignal(QModelIndex)
@@ -18,6 +18,20 @@ class MovieListView(QListView):
         self.listModeIndex = -1
         self.switchModel()
         self.doubleClicked.connect(self.onDoubleClicked)
+        self.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.customContextMenuRequested.connect(self.onContextMenu)
+
+        self.contextMenu = QMenu()
+        self.delAction = self.contextMenu.addAction("Mark Downloaded")
+        #delAction.triggered.connect(self.onMarkDownloaded)
+
+    def onContextMenu(self, point):
+        if self.listModeIndex == 1:
+            action = self.contextMenu.exec_(self.viewport().mapToGlobal(point))
+            if action == self.delAction: 
+                index = self.proxy.mapToSource(self.indexAt(point))
+                self.proxy.markDownloaded(index)
+                self.refresh()
 
     def createModel(self, m):
         model = self.listMode[self.listModeIndex]
