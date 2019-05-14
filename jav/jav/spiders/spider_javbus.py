@@ -34,5 +34,5 @@ class JavBus(scrapy.Spider, Common):
             il.add_xpath('actor', '//*[@id="video_cast"]/table/tr/td[2]')
             return il.load_item()
         except:
-            self.save_html(response.body)
+            #self.save_html(response.body)
             self.log(traceback.format_exc())

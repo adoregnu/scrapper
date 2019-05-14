@@ -12,11 +12,11 @@ class Dmm(scrapy.Spider, Common):
 
     def start_requests(self):
         url = 'http://www.dmm.co.jp/en/search/=/searchstr='
-        kws = self.prepare_request()
-        for k in kws:
-            yield scrapy.Request(url='%s%s/'%(url, self.get_cid(k)),
+        for id in self.cids:
+            yield scrapy.Request(url='%s%s/'%(url, self.get_cid(id['cid'])),
                 callback=self.parse_search_list,
-                cookies = self.cookies['www.dmm.co.jp']
+                cookies = self.cookies['www.dmm.co.jp'],
+                meta={'id':id}
             )
 
     def add_selector_ja(self, fields):
@@ -50,11 +50,12 @@ class Dmm(scrapy.Spider, Common):
             ('title', '//meta[@property="og:title"]/@content'),
             ('actor', '//*[@id="performer"]/a/text()')
         ]
+        id = response.meta['id']
         try :
             il = ItemLoader(item=JavItem(), response=response)
             lang[response.meta['lang']](fieldlist)
             self.initItemLoader(il, fieldlist)
-            il.add_value('id', self.keyword)
+            il.add_value('id', id['cid'])
             return il.load_item()
         except:
             #self.save_html(response.body)
@@ -63,15 +64,16 @@ class Dmm(scrapy.Spider, Common):
     def parse_search_list(self, response):
         results, cids = self.get_dmm_cids(response)
 
+        id = response.meta['id']
         if len(set(cids)) != 1:
-            self.log('found more then 1 movies({}) from keyword:({})'.format(cids, self.keyword))
+            self.log('found more then 1 movies({}) from keyword:({})'.format(cids, id['cid']))
             return
 
         for ppm in [s for s in results if 'ppm/video' in s]:
             return scrapy.Request(url = ppm,
                 callback = self.parse_search_page,
                 cookies = self.cookies['www.dmm.co.jp'],
-                meta = {'lang':'en'}
+                meta = {'lang':'en', 'id':id}
             )
 
         import copy
@@ -81,5 +83,5 @@ class Dmm(scrapy.Spider, Common):
             return scrapy.Request(url = digital,
                 callback = self.parse_search_page,
                 cookies = cookie,
-                meta = {'lang':'ja'}
+                meta = {'lang':'ja', 'id':id}
             )

@@ -1,11 +1,12 @@
 import re, os
 import scrapy
 import traceback
+from scrapy.loader import ItemLoader
 
-
-class Common():
-    outdir = './outdir'
-    keyword = '253KAKU-204'
+class Common:
+    #outdir = './outdir'
+    #keyword = '253KAKU-204'
+    cids = []
 
     cookies = {
         'www.mgstage.com':[{'name':'adc', 'value':'1', 'domain':'mgstage.com', 'path':'/'}],
@@ -15,17 +16,7 @@ class Common():
 
     movieinfo = {}
 
-    def prepare_request(self):
-        #targetdir = '/'.join([self.outdir, self.keyword])
-        #os.makedirs(targetdir, exist_ok=True)
-        if isinstance(self.keyword, str):
-            kws = [self.keyword]
-        else:
-            kws = self.keyword
-        return kws
-
-    def get_cid(self, k = None):
-        if not k: k = self.keyword
+    def get_cid(self, k):
         numpartlen = len(k.split('-')[-1])
         if numpartlen == 3:
             cid = k.replace('-', '00')
@@ -35,6 +26,7 @@ class Common():
             cid = k.replace('-','')
         return cid
 
+    '''
     def get_out_path(self):
         return '%s/%s' % (self.outdir, self.keyword)
 
@@ -44,6 +36,7 @@ class Common():
         with open(fname, 'wb') as (f):
             f.write(body)
             self.log('Saved file %s' % fname)
+    '''
 
     def initItemLoader(self, il, fields):
         add = lambda fn, f: \
@@ -69,7 +62,7 @@ class Common():
     def parse_dmm_cid_list(self, response):
         _, cids = self.get_dmm_cids(response)
         if len(cids) == 0:
-            return
+            return response.meta['il'].load_item()
         
         response.meta['cids'] = list(set(cids))
         return self.search_r18(response)
@@ -106,7 +99,6 @@ class Common():
             return self.search_r18(response)
 
     def parse_r18_actor_info(self, response):
-        from scrapy.loader import ItemLoader
         try :
             il = ItemLoader(item=response.meta['item'], response=response)
             il.add_xpath('actor', '//label[contains(.,"Actress(es):")]/following-sibling::div[1]/span/a/span/text()')

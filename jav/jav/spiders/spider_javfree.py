@@ -12,16 +12,16 @@ class JavFree(scrapy.Spider, Common):
 
     def start_requests(self):
         url = 'https://javfree.me/?s='
-        kws = self.prepare_request()
-        for k in kws:
-            yield scrapy.Request(url='%s%s'%(url, k), callback=self.parse_search)
+        for id in self.cids:
+            yield scrapy.Request(url='%s%s'%(url, id['cid']), callback=self.parse_search, meta={'id':id})
 
     def parse_search(self, response):
+        id = response.meta['id']
         url = response.css('h2.entry-title > a::attr(href)').extract_first()
         if url:
-            yield scrapy.Request(url=url, callback=self.parse)
+            yield scrapy.Request(url=url, callback=self.parse, meta={'id':id})
         else:
-            self.log('{}:: not found {}.'.format(self.name, self.keyword))
+            self.log('{}:: not found {}.'.format(self.name, id['cid']))
 
     def parse(self, response):
         from scrapy.loader import ItemLoader
@@ -48,9 +48,9 @@ class JavFree(scrapy.Spider, Common):
             #self.log(m.groups())
         else:
             jname = tags[0]
-
+        id = response.meta['id']
         il.add_value('studio', tags[-1])
-        il.add_value('id', self.keyword)
+        il.add_value('id', id['cid'])
 
         self.log(tags)
         if len(tags) > 1:
@@ -60,5 +60,6 @@ class JavFree(scrapy.Spider, Common):
                     url=dmmurl,
                     callback=self.parse_dmm_cid_list,
                     cookies=self.cookies['www.dmm.co.jp'],
-                    meta={'item':avitem})
-        return il.load_item()
+                    meta={'item':avitem, 'il':il, 'id':id})
+        else:
+            return il.load_item()

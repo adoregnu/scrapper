@@ -5,7 +5,7 @@ import jav.utils as utils
 
 class MovieInfoModel(QAbstractItemModel):
     row = [
-        ('path', 'title', 'originaltitle', 'year', 'releasedate', 'id', 'studio',
+        ('path', 'title', 'originaltitle', 'rating', 'year', 'releasedate', 'id', 'studio',
          'set', 'plot', 'genre', 'actor', 'poster', 'fanart'),
     ]
     def __init__(self, parent=None):
@@ -27,29 +27,33 @@ class MovieInfoModel(QAbstractItemModel):
         elif isinstance(actors, dict):
                 actors['name'] = adjust_actor(actors['name'])
 
-    def setMovieInfo(self, movieinfo):
+    def setMovieInfo(self, movieinfo, bypassFilter):
         if movieinfo.get('actor'):
             self.adjustActor(movieinfo)
 
-        if not self.columnFilter:
+        if bypassFilter or not self.columnFilter:
             self.movieInfo = movieinfo
             return
 
         for column in self.columnFilter:
             if movieinfo.get(column):
+                print('update column ', column, movieinfo[column])
                 self.movieInfo[column] = movieinfo[column]
 
-    def clearMovieInfo(self, forceclear):
-        if forceclear or not self.columnFilter:
-            self.columnFilter = []
+    def clearMovieInfo(self, forceClear, keepColumnFilter):
+        if forceClear:
             self.movieInfo = {}
+        if not keepColumnFilter:
+            self.columnFilter = []
 
     def saveMovieInfo(self):
         curpath = self.movieInfo['path']
         path = '%s/%s.nfo'%(curpath, os.path.basename(curpath))
+        #print(self.movieInfo)
         utils.dict2nfo(self.movieInfo, path)
         fields = ['poster', 'fanart']
         for field in fields:
+            if not self.movieInfo.get(field): continue
             img = self.movieInfo[field]
             if isinstance(img, utils.AvImage):
                 img.save('%s/%s-%s.%s'%(

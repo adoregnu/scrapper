@@ -6,9 +6,8 @@ class PipelineDmm(PipelineCommon):
         super().__init__(crawler)
 
     def process_item(self, item, spider):
-        self.item = item
-        self.filter('plot', self.strip)
-        self.filter('runtime', self.digit)
-        self.filter('releasedate', self.slash2dash)
-        self.list2str()
+        self.filter(item, 'plot', self.strip)
+        self.filter(item, 'runtime', self.digit)
+        self.filter(item, 'releasedate', self.slash2dash)
+        self.list2str(item)
         return item

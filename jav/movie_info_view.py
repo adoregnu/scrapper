@@ -2,146 +2,14 @@ import os
 from collections import OrderedDict
 import xml.etree.ElementTree as ET
 
-from PyQt5.QtWidgets import (QLabel, QLineEdit, QPlainTextEdit, QListWidget,
-    QDataWidgetMapper, QWidget, QHBoxLayout, QVBoxLayout, QPushButton,
-    QApplication, QStyledItemDelegate, QFrame, QGridLayout, QCheckBox)
-from PyQt5.QtCore import (Qt, pyqtProperty, QEvent, QSize)
-from PyQt5.QtGui import QKeyEvent, QPixmap, QWindow
+from PyQt5.QtWidgets import (QLabel, QLineEdit, QPlainTextEdit, QDataWidgetMapper
+    , QWidget, QHBoxLayout, QVBoxLayout, QStyledItemDelegate, QGridLayout, QCheckBox)
+from PyQt5.QtCore import Qt
  
-from PIL import Image, ImageQt
-
-import jav.utils as utils
 from movie_info_model import MovieInfoModel
-
-class ListWidget(QWidget):
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        mainLayout = QHBoxLayout()
-        mainLayout.setContentsMargins(0, 0, 0, 0)
-        self._listWidget = QListWidget()
-        mainLayout.addWidget(self._listWidget)
-
-        right = QVBoxLayout()
-        right.setAlignment(Qt.AlignTop)
-        self._newItem = QLineEdit()
-        self._add = QPushButton('Add')
-        self._add.clicked.connect(self.onAddClicked)
-        self._remove = QPushButton('Remove')
-        self._remove.clicked.connect(self.onRemoveClicked)
-        right.addWidget(self._newItem)
-        right.addWidget(self._add)
-        right.addWidget(self._remove)
-        mainLayout.addLayout(right)
-
-        self.setLayout(mainLayout)
-
-    def onAddClicked(self):
-        text = self._newItem.text().strip()
-        if not len(text): return
-        items = self._listWidget.findItems(text, Qt.MatchExactly)
-        if (len(items) > 0):
-            print('already exists actor name!')
-            return
-
-        self._listWidget.addItem(text)
-        self._newItem.clear()
-        QApplication.postEvent(self,
-            QKeyEvent(QEvent.KeyPress, Qt.Key_Enter, Qt.NoModifier))
-
-    def onRemoveClicked(self):
-        if not self._listWidget.currentItem():
-            return
-
-        item = self._listWidget.currentItem()
-        #print(item.text())
-        self._listWidget.takeItem(self._listWidget.row(item))
-        QApplication.postEvent(self,
-            QKeyEvent(QEvent.KeyPress, Qt.Key_Enter, Qt.NoModifier))
-
-    def getListValue(self):
-        vals = []
-        for i in range(self._listWidget.count()):
-            vals.append(self._listWidget.item(i).text())
-        return ';'.join(vals)
-
-    def setListValue(self, value):
-        self._listWidget.clear()
-        if not value: return
-        self._listWidget.insertItems(0, value.split(';'))
-
-    listValue = pyqtProperty(str, getListValue, setListValue)
-
-class ImageLabel(QWidget):
-    _image = None 
-    def __init__(self, title, editable = True, parent=None):
-        super().__init__(parent)
-        layout = QVBoxLayout()
-        layout.setContentsMargins(0, 0, 0, 0)
-        self._label = QLabel()
-        self._label.setAlignment(Qt.AlignCenter)
-        self._label.setMinimumWidth(400)
-        self._label.setMinimumHeight(350)
-        self._label.setFrameShape(QFrame.Panel)
-        self._label.setFrameShadow(QFrame.Sunken)
-        self._label.setLineWidth(1)
-
-        layout.addWidget(self._label)
-        if editable:
-            hbox = QHBoxLayout()
-            self._btnRotate = QPushButton('Rotate 90 degree')
-            self._btnRotate.clicked.connect(self.onClickRotate)
-            self._btnCrop = QPushButton('Crop Right')
-            self._btnCrop.clicked.connect(self.onClickCrop)
-            hbox.addWidget(self._btnRotate)
-            hbox.addWidget(self._btnCrop)
-            layout.addLayout(hbox)
-        self.setLayout(layout)
-
-    def draw(self):
-        self._label.clear()
-        pr = QWindow().devicePixelRatio()
-        size = QSize(self._label.width(), self._label.height()) * pr
- 
-        qim = ImageQt.ImageQt(self._image.image())
-        pixmap = QPixmap.fromImage(qim)
-        pixmap.setDevicePixelRatio(pr)
-        pixmap = pixmap.scaled(size, Qt.KeepAspectRatio, transformMode=Qt.SmoothTransformation)
-        self._label.setPixmap(pixmap)
-
-    def image(self):
-        #print('image')
-        return self._image
-
-    def setImage(self, image):
-        if not image:
-            if self._image: del self._image
-            self._image = None
-            self._label.clear()
-            return
-
-        #print('setImage {}'.format(image))
-        if isinstance(image, str):
-            self._image = utils.AvImage(image)
-        elif isinstance(image, utils.AvImage):
-            self._image = image
-        else:
-            print('unknown format')
-            return
-        self.draw()
-
-    def onClickRotate(self):
-        #print('onClickRotate')
-        self._image = self._image.rotate()
-        self.draw()
-        QApplication.postEvent(self,
-            QKeyEvent(QEvent.KeyPress, Qt.Key_Enter, Qt.NoModifier))
-
-    def onClickCrop(self):
-        #print('onClickCrop')
-        self._image = self._image.cropLeft()
-        self.draw()
-        QApplication.postEvent(self,
-            QKeyEvent(QEvent.KeyPress, Qt.Key_Enter, Qt.NoModifier))
+from genre_widget import GenreWidget
+from cover_widget import CoverWidget
+from rating_widget import RatingWidget
 
 class MovieInfoDelegate(QStyledItemDelegate):
     def __init__(self, parent = None):
@@ -152,6 +20,7 @@ class MovieInfoDelegate(QStyledItemDelegate):
 
     def setEditorData(self, editor, index):
         data = index.model().data(index, Qt.DisplayRole)
+#        print('setEditorData column:{}, type:{}'.format(index.column(), type(editor)))
         if isinstance(editor, QLineEdit):
             editor.setText(data)
         elif isinstance(editor, QPlainTextEdit):
@@ -160,7 +29,7 @@ class MovieInfoDelegate(QStyledItemDelegate):
             editor.setImage(data)
 
     def setModelData(self, editor, model, index):
-        #print('setModelData column:{}'.format(index.column()))
+#        print('setModelData column:{}'.format(index.column()))
         if isinstance(editor, QLineEdit):
             model.setData(index, editor.text(), Qt.DisplayRole)
         elif isinstance(editor, QPlainTextEdit):
@@ -183,14 +52,15 @@ class MovieInfoView(QWidget):
         self.controls['path'] = ['Path:', QLineEdit()]
         self.controls['title'] = ['Title:', QLineEdit()]
         self.controls['originaltitle'] = ['Original Title:', QLineEdit()]
+        self.controls['rating'] = ['Rating:', RatingWidget()]
         self.controls['year'] = ['Year:', QLineEdit()]
         self.controls['releasedate'] = ['Release Date:', QLineEdit()]
         self.controls['id'] = ['ID:', QLineEdit()]
         self.controls['studio'] = ['Studio:', QLineEdit()]
         self.controls['set'] = ['Movie Set:', QLineEdit()]
         self.controls['plot'] = ['Plot:', QPlainTextEdit()]
-        self.controls['genre'] = ['Genre:', ListWidget()]
-        self.controls['actor'] = ['Actor:', ListWidget()]
+        self.controls['genre'] = ['Genre:', GenreWidget()]
+        self.controls['actor'] = ['Actor:', GenreWidget()]
 
         left = QGridLayout()
         row = 0
@@ -204,8 +74,8 @@ class MovieInfoView(QWidget):
             row += 1
 
         right = QVBoxLayout()
-        self.poster = ImageLabel('poster')
-        self.fanart = ImageLabel('fanart', False)
+        self.poster = CoverWidget('poster')
+        self.fanart = CoverWidget('fanart', False)
         right.addWidget(self.poster)
         right.addWidget(self.fanart)
 
@@ -222,8 +92,8 @@ class MovieInfoView(QWidget):
 
         index = 0
         for key, ctrl in self.controls.items():
-            if 'genre' == key or 'actor' == key:
-                self.mapper.addMapping(ctrl[self.ID_CTRL], index, b'listValue')
+            if 'genre' == key or 'actor' == key or 'rating' == key:
+                self.mapper.addMapping(ctrl[self.ID_CTRL], index, b'Value')
             else:
                 self.mapper.addMapping(ctrl[self.ID_CTRL], index)
             index += 1
@@ -240,14 +110,14 @@ class MovieInfoView(QWidget):
 
         self.model.setColumnFilter(columnFilter)
 
-    def setMovieInfo(self, movieinfo):
+    def setMovieInfo(self, movieinfo, bypassFilter):
         if not movieinfo: return
-        self.model.setMovieInfo(movieinfo)
+        self.model.setMovieInfo(movieinfo, bypassFilter)
         self.mapper.toFirst()
 
-    def clearMovieInfo(self, forceclear = True):
-        self.model.clearMovieInfo(forceclear)
-        if forceclear:
+    def clearMovieInfo(self, forceClear = True, keepColumnFilter = False):
+        self.model.clearMovieInfo(forceClear, keepColumnFilter)
+        if not keepColumnFilter:
             for _, val in self.controls.items():
                 val[self.ID_CHECK].setCheckState(Qt.Unchecked)
     

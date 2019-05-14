@@ -13,24 +13,24 @@ class SpiderAvwiki(scrapy.Spider, Common):
 
     def start_requests(self):
         url = 'https://shecool.net/av-wiki/?s='
-        kws = self.prepare_request()
-        for kw in kws:
+        for id in self.cids:
             yield scrapy.Request(
-                url = '%s%s' % (url, kw.upper()),
-                callback=self.parse_search_result
+                url = '%s%s' % (url, id['cid'].upper()),
+                callback=self.parse_search_result,
+                meta={'id':id}
             )
 
     def parse_search_result(self, response):
         result = response.css('div.archive-title > h1 > span::text').extract()
         if len(result) != 2:
             self.log('unkown result!')
-            self.save_html(response.body, 'avwiki-search')
+            #self.save_html(response.body, 'avwiki-search')
             return
         if int(result[1][0]) != 1:
             self.log(('not found!! {}').format(result[1]))
             return
         href = response.css('h2.archive-header-title > a::attr(href)').extract_first()
-        yield scrapy.Request(url=href, callback=self.parse_real_result)
+        yield scrapy.Request(url=href, callback=self.parse_real_result, meta=response.meta)
 
     def parse_real_result(self, response):
         selectors = [
@@ -38,15 +38,16 @@ class SpiderAvwiki(scrapy.Spider, Common):
             'div.col6 > p:contains("{}")',
         ]
         links = None
+        id = response.meta['id']
         for css in selectors:
-            content = response.css(css.format(self.keyword.upper()))
+            content = response.css(css.format(id['cid'].upper()))
             if len(content) > 0:
                 links = content.css('a::attr(href)').extract()
                 break
         self.log(links)
         if not links:
             self.log('could not parse html!')
-            self.save_html(response.body, 'avwiki-real')
+            #self.save_html(response.body, 'avwiki-real')
             return
 
         sites = {
@@ -68,7 +69,7 @@ class SpiderAvwiki(scrapy.Spider, Common):
                 url = link,
                 callback = sites[domain],
                 cookies = self.cookies[domain],
-                meta = {'item':item}
+                meta = {'item':item, 'id':id}
             )
 
     def parse_movie_info(self, response):
@@ -84,5 +85,5 @@ class SpiderAvwiki(scrapy.Spider, Common):
             il.add_xpath('rating',  '//th[contains(., "評価：")]/following-sibling::td//text()')
             return il.load_item()
         except:
-            self.save_html(response.body)
+            #self.save_html(response.body)
             self.log(traceback.format_exc())

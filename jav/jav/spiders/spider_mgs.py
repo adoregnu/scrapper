@@ -12,11 +12,10 @@ class Mgstage(scrapy.Spider, Common):
 
     def start_requests(self):
         url = 'https://www.mgstage.com/product/product_detail/'
-        kws = self.prepare_request()
-        for k in kws:
-            yield scrapy.Request(url='%s%s/'%(url, k), 
+        for id in self.cids:
+            yield scrapy.Request(url='%s%s/'%(url, id['cid']), 
                 callback = self.parse, 
-                cookies = self.cookies['www.mgstage.com'])
+                cookies = self.cookies['www.mgstage.com'], meta = {'id':id})
 
     def parse(self, response):
         from scrapy.loader import ItemLoader
@@ -32,5 +31,5 @@ class Mgstage(scrapy.Spider, Common):
             il.add_xpath('rating',  '//th[contains(., "評価：")]/following-sibling::td//text()')
             return il.load_item()
         except:
-            self.save_html(response.body)
+            #self.save_html(response.body)
             self.log(traceback.format_exc())

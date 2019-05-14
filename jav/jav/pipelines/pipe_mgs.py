@@ -6,11 +6,10 @@ class PipelineMgs(PipelineCommon):
         super().__init__(crawler)
 
     def process_item(self, item, spider):
-        self.item = item
-        self.filter('releasedate', self.slash2dash)
-        self.filter('studio', lambda x:item[x][0].split('=')[1])
-        self.filter('title', self.strip)
-        self.filter('runtime', self.digit)
-        self.filter('rating', self.digit)
-        self.list2str()
+        self.filter(item, 'releasedate', self.slash2dash)
+        self.filter(item, 'studio', lambda it, x:it[x][0].split('=')[1])
+        self.filter(item, 'title', self.strip)
+        self.filter(item, 'runtime', self.digit)
+        self.filter(item, 'rating', self.digit)
+        self.list2str(item)
         return item

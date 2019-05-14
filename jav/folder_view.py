@@ -1,8 +1,9 @@
 import os
 import glob
 
-from PyQt5.QtWidgets import QFileSystemModel, QListView, QWidget, QVBoxLayout, QLineEdit, QMenu
-from PyQt5.QtCore import Qt, pyqtSignal, pyqtSlot 
+from PyQt5.QtWidgets import (QFileSystemModel, QListView, QWidget, QVBoxLayout,
+    QLineEdit, QMenu, QAbstractItemView)
+from PyQt5.QtCore import Qt, pyqtSignal
 
 class FolderList(QListView):
     prevPath = []
@@ -10,6 +11,7 @@ class FolderList(QListView):
         super().__init__(parent)
         self.config = config
         self.setWindowTitle("Dir View")
+        self.setSelectionMode(QAbstractItemView.ExtendedSelection)
         self.setContextMenuPolicy(Qt.CustomContextMenu)
         self.customContextMenuRequested.connect(self.onContextMenu)
         self.clicked.connect(self.onListClicked)
@@ -52,7 +54,7 @@ class FolderList(QListView):
         self.prevPath.append(index)
         self.changeDir(path)
 
-    def onListClicked(self, index):
+    def getFiles(self, index):
         finfo = self.model().fileInfo(index)
 
         info_files = []
@@ -61,7 +63,10 @@ class FolderList(QListView):
             #print(path)
             info_files.extend(glob.glob('%s/*.nfo'%path))
             info_files.extend(glob.glob('%s/*.jpg'%path))
+        return info_files
 
+    def onListClicked(self, index):
+        info_files = self.getFiles(index)
         self.parent().movieFound.emit(info_files)
 
     def changeDir(self, path):
@@ -117,6 +122,9 @@ class FolderView(QWidget):
 
     def getSelectedIndexes(self):
         return self.folderList.selectedIndexes()
+
+    def getFiles(self, index):
+        return self.model.getFiles(index)
 
     def playFile(self):
         index = self.folderList.currentIndex()
