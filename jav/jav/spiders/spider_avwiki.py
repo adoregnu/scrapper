@@ -26,51 +26,66 @@ class SpiderAvwiki(scrapy.Spider, Common):
             self.log('unkown result!')
             #self.save_html(response.body, 'avwiki-search')
             return
-        if int(result[1][0]) != 1:
-            self.log(('not found!! {}').format(result[1]))
-            return
-        href = response.css('h2.archive-header-title > a::attr(href)').extract_first()
+
+        href = None
+        for link in response.css('h2.archive-header-title > a::attr(href)').extract():
+            self.log(link)
+            if '/av-actress/' not in link:
+                href = link
+                break
+        if not href: return
         yield scrapy.Request(url=href, callback=self.parse_real_result, meta=response.meta)
+
+    def parser1(self, content):
+        link = content.css('div.item-header1 > p > a::attr(href)').extract_first()
+        actor = content.css('div.s-contents > p *::text').extract()[1]
+        self.log('actor:{}, link:{}'.format(actor, link))
+        return link, actor
+
+    def parser2(self, content):
+        self.log('not implemented!')
+        return None, None
 
     def parse_real_result(self, response):
         selectors = [
-            'div.contents-box:contains("{}")',
-            'div.col6 > p:contains("{}")',
+            {'css':'div.contents-box:contains("{}")', 'parser':self.parser1},
+            {'css':'div.col6 > p:contains("{}")', 'parser':self.parser2}
         ]
-        links = None
+
         id = response.meta['id']
+        cid = id['cid'].upper()
+        link = None
+        actor = None
         for css in selectors:
-            content = response.css(css.format(id['cid'].upper()))
+            content = response.css(css['css'].format(cid))
             if len(content) > 0:
-                links = content.css('a::attr(href)').extract()
+                link, actor = css['parser'](content)
                 break
-        self.log(links)
-        if not links:
+
+        if not link:
             self.log('could not parse html!')
             #self.save_html(response.body, 'avwiki-real')
             return
 
-        sites = {
-            'www.mgstage.com':self.parse_movie_info, 
-            'www.dmm.co.jp':self.parse_dmm_cid_list
-        }
-        links = set(links)
+        #process link
         item = JavItem()
-        for link in list(links):
-            domain = link.split('/')[2]
-            if not sites.get(domain):
-                self.log('unknown domain! %s' % domain)
-                continue
+        domain = link.split('/')[2]
+        yield scrapy.Request(
+            url = link,
+            callback = self.parse_movie_info,
+            cookies = self.cookies[domain],
+            meta = {'item':item, 'id':id}
+        )
 
-            if domain == 'www.mgstage.com':
-                link = 'https://www.mgstage.com/product/product_detail/%s'%link.split('/')[-2]
-
-            yield scrapy.Request(
-                url = link,
-                callback = sites[domain],
-                cookies = self.cookies[domain],
-                meta = {'item':item, 'id':id}
-            )
+        #process actor
+        if not actor or actor == '＊＊＊': return
+        dmm_search_url = 'https://www.dmm.co.jp/search/=/searchstr=%s 単体' % actor
+        yield scrapy.Request(
+            url = dmm_search_url,
+            callback = self.parse_dmm_cid_list,
+            cookies = self.cookies['www.dmm.co.jp'],
+            meta = {'item':item, 'id':id}
+        )
 
     def parse_movie_info(self, response):
         from scrapy.loader import ItemLoader

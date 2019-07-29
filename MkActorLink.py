@@ -40,8 +40,8 @@ def MakeLinkEachProduct(root, nfoPath):
             Path(linkPath).symlink_to(targetPath, target_is_directory=True)
             print('{} -> {}'.format(linkPath, targetPath))
         except Exception as e:
-#            print(e)
-            pass
+            if 'WinError 183' not in str(e):
+                print(e)
 
 def ProcessActorName(tree, nfoPath, argv):
     root = tree.getroot()

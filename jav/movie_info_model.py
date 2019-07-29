@@ -90,6 +90,7 @@ class MovieInfoModel(QAbstractItemModel):
 
     def index(self, row, column, parent):
         item = self.movieInfo.get(self.row[row][column])
+        #print(row, column, self.row[row][column], item)
         if item:
             return self.createIndex(row, column, item)
         else:
@@ -108,8 +109,6 @@ class MovieInfoModel(QAbstractItemModel):
         actors = self.movieInfo.get(key)
         if actors and not isinstance(actors, list):
             actors = [actors]
-        else:
-            actors = []
 
         if not len(value):
             names = []
@@ -118,9 +117,11 @@ class MovieInfoModel(QAbstractItemModel):
             names.sort()
         #print('names: ', names)
         if not len(actors):
+            actors = []
             actors.append({'name':value})
         else:
             actors = sorted(actors, key=lambda a: a['name'])
+            print(actors)
             i = 0
             j = 0
             while i < len(names) and j < len(actors):
@@ -142,6 +143,7 @@ class MovieInfoModel(QAbstractItemModel):
                 i += 1
 
         self.movieInfo[key] = actors
+        print(actors)
         #print('result: {}'.format(actors))
 
     def setData(self, index, value, role=Qt.EditRole):
@@ -169,6 +171,10 @@ class MovieInfoModel(QAbstractItemModel):
             elif isinstance(item[0], dict):
                 return ';'.join([i['name'] for i in item])
         elif isinstance(item, dict):
-            return item['name']
+            #print(index.column(), item)
+            if index.column() == 13:
+                return item['thumb']
+            if index.column() == 11:
+                return item['name']
         else:
             return item

@@ -41,7 +41,13 @@ class FolderList(QListView):
 
         try:
             f = self.model().fileInfo(index)
-            shutil.rmtree(f.absoluteFilePath())
+            path = f.absoluteFilePath()
+            if f.isDir():
+                shutil.rmtree(path)
+            elif f.isSymLink():
+                os.unlink(path)
+            else:
+                os.remove(path)
         except Exception as e:
             print(e)
 
@@ -124,7 +130,7 @@ class FolderView(QWidget):
         return self.folderList.selectedIndexes()
 
     def getFiles(self, index):
-        return self.model.getFiles(index)
+        return self.folderList.getFiles(index)
 
     def playFile(self):
         index = self.folderList.currentIndex()

@@ -30,13 +30,12 @@ class Common:
     def get_out_path(self):
         return '%s/%s' % (self.outdir, self.keyword)
 
-    def save_html(self, body, fname = None):
-        fname = self.keyword if not fname else fname
-        fname = '%s/%s.html' % (self.outdir, fname)
+    '''
+    def save_html(self, body, cid):
+        fname = '%s.html' % cid
         with open(fname, 'wb') as (f):
             f.write(body)
             self.log('Saved file %s' % fname)
-    '''
 
     def initItemLoader(self, il, fields):
         add = lambda fn, f: \
@@ -62,7 +61,7 @@ class Common:
     def parse_dmm_cid_list(self, response):
         _, cids = self.get_dmm_cids(response)
         if len(cids) == 0:
-            return response.meta['il'].load_item()
+            return #response.meta['item'].load_item()
         
         response.meta['cids'] = list(set(cids))
         return self.search_r18(response)
@@ -76,8 +75,19 @@ class Common:
             self.log('search_r18:: no cids left')
             return
 
-        url = '%s%s'%(r18, cids.pop())
-        self.log(url)
+        while len(cids) > 0:
+            cid = cids.pop()
+            self.log('extracting exact cid from %s' % cid)
+            try :
+                exp = r'([a-zA-Z]+)(?:-|00)?([0-9]{3,5})(?:\D)?([0-9A-Fa-f])?'
+                m = re.search(exp, cid)
+                cid = '-'.join([m.group(1), m.group(2)]).upper()
+                break
+            except Exception as e:
+                self.log(e)
+
+        url = '%s%s'%(r18, cid)
+        self.log('searching cid from R18 %s' % url)
         yield scrapy.Request(
             url = url,
             callback=self.parse_r18_search_result,
