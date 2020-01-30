@@ -28,7 +28,9 @@ class JavLibrary(scrapy.Spider, Common):
         if len(exactMatch) > 0:
             url = response.urljoin(exactMatch[0].css('a::attr(href)').extract_first())
             self.log('url:%s' % url)
-            return scrapy.Request(url=url, callback=self.parse_result, meta={'id':id})
+            #request.headers['User-Agent'] = ua
+            return scrapy.Request(url=url, callback=self.parse_result, dont_filter=True,
+                meta={'id':id}, headers = {'User-Agent':response.headers['User-Agent']})
 
     def parse_result(self, response):
         from scrapy.loader import ItemLoader

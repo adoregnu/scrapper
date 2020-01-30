@@ -53,6 +53,7 @@ class JavFree(scrapy.Spider, Common):
         il.add_value('id', id['cid'])
 
         self.log(tags)
+        il.load_item()
         if len(tags) > 1:
             dmmurl = 'http://www.dmm.co.jp/search/=/searchstr={} 単体/'.format(jname)
             self.log(dmmurl)
@@ -61,5 +62,3 @@ class JavFree(scrapy.Spider, Common):
                     callback=self.parse_dmm_cid_list,
                     cookies=self.cookies['www.dmm.co.jp'],
                     meta={'item':avitem, 'il':il, 'id':id})
-        else:
-            return il.load_item()

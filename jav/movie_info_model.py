@@ -116,7 +116,7 @@ class MovieInfoModel(QAbstractItemModel):
             names = value.split(';')
             names.sort()
         #print('names: ', names)
-        if not len(actors):
+        if not actors or not len(actors):
             actors = []
             actors.append({'name':value})
         else:

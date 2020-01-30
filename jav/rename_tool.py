@@ -113,7 +113,7 @@ class FileRenameDialog(QDialog):
         innerTop = QHBoxLayout()
         self.currpath = QLineEdit(self.path)
         self.currpath.setDisabled(True)
-        exp = r'([a-zA-Z]+)(?:-|00)?([0-9]{3,5})(?:\D)?([0-9A-Fa-f])?'
+        exp = r'([a-zA-Z]+)(?:-|00| )?([0-9]{3,5})(?:\D)?([0-9A-Ca-c])?'
         self.regexp = QLineEdit(exp)
         innerTop.addWidget(self.currpath)
         innerTop.addWidget(self.regexp)

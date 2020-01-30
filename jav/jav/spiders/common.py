@@ -15,6 +15,7 @@ class Common:
     }
 
     movieinfo = {}
+    searched_cids = []
 
     def get_cid(self, k):
         numpartlen = len(k.split('-')[-1])
@@ -77,18 +78,28 @@ class Common:
 
         while len(cids) > 0:
             cid = cids.pop()
-            self.log('extracting exact cid from %s' % cid)
+            exact_cid = None
             try :
                 exp = r'([a-zA-Z]+)(?:-|00)?([0-9]{3,5})(?:\D)?([0-9A-Fa-f])?'
                 m = re.search(exp, cid)
-                cid = '-'.join([m.group(1), m.group(2)]).upper()
-                break
+                exact_cid = '-'.join([m.group(1), m.group(2)]).upper()
+                if exact_cid in self.searched_cids:
+                    self.log('same cid(%s) as previous search! skip!' % exact_cid)
+                    continue
+                else:
+                    self.log('extracting %s from %s' % (exact_cid, cid))
+                    break
             except Exception as e:
                 self.log(e)
 
-        url = '%s%s'%(r18, cid)
+        if not exact_cid:
+            self.log('no cid suited for seaching!')
+            return
+
+        url = '%s%s'%(r18, exact_cid)
+        self.searched_cids.append(exact_cid)
         self.log('searching cid from R18 %s' % url)
-        yield scrapy.Request(
+        return scrapy.Request(
             url = url,
             callback=self.parse_r18_search_result,
             meta=response.meta)
@@ -110,8 +121,13 @@ class Common:
 
     def parse_r18_actor_info(self, response):
         try :
+            actor_xpath = '//label[contains(.,"Actress(es):")]/following-sibling::div[1]/span/a/span/text()'
+            actor = response.xpath(actor_xpath).extract_first()
+            print('parse_r18_actor_info ::', actor)
+            if actor == None:
+                return self.search_r18(response)
             il = ItemLoader(item=response.meta['item'], response=response)
-            il.add_xpath('actor', '//label[contains(.,"Actress(es):")]/following-sibling::div[1]/span/a/span/text()')
+            il.add_xpath('actor', actor_xpath)
             il.add_css('actor_thumb', 'ul.cmn-list-product03.clearfix.mr07 > li > a > p > img::attr(src)')
             return il.load_item()
         except:

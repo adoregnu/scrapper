@@ -28,7 +28,7 @@ class CentralWidget(QWidget):
         self.movieTab = QTabWidget()
         self.movieTab.setContentsMargins(0, 0, 0, 0)
         self.listView = MovieListView(config, self.fileView.model, parent=self)
-        self.listView.movieDoubleClicked.connect(self.onMovieDoubleClicked)
+        self.listView.movieDoubleClicked.connect(self.onMovieClicked)
         self.movieTab.addTab(self.listView, 'List')
 
         self.infoView = MovieInfoView()
@@ -49,8 +49,15 @@ class CentralWidget(QWidget):
         self.site = None
         self.numCids = 0
 
+    '''
     def onMovieDoubleClicked(self, index):
         self.movieTab.setCurrentWidget(self.infoView)
+        self.fileView.setCurrentIndex(index)
+    '''
+
+    def onMovieClicked(self, index, doubleClicked):
+        if doubleClicked:
+            self.movieTab.setCurrentWidget(self.infoView)
         self.fileView.setCurrentIndex(index)
 
     def updateFromFile(self, files, index = None):
@@ -78,18 +85,31 @@ class CentralWidget(QWidget):
         #print(info)
         self.infoView.setMovieInfo(info, self.numCids > 1)
 
-    def updateFromScrapy(self, info):
-        #self.infoView.clearMovieInfo(False, True)
+    def checkCrop(self, info):
         donotcrop = []
+        if 'VR' in info['id'] : return False
         if self.scrapperConfig.get('studios_skipping_crop'):
             donotcrop = self.scrapperConfig['studios_skipping_crop'].split(',')
             #print(donotcrop)
+        if not info.get('studio'): return False
+        if info['studio'] in donotcrop: return False
+
+        if self.scrapperConfig.get('labels_skipping_crop'):
+            donotcrop = self.scrapperConfig['labels_skipping_crop'].split(',')
+
+        if not info.get('label'): return False
+        if info['label'] in donotcrop: return False
+
+        return True
+ 
+    def updateFromScrapy(self, info):
+        #self.infoView.clearMovieInfo(False, True)
         try :
             info['fanart'] = info['thumb']
-            if not info.get('studio') or info['studio'] in donotcrop:
-                info['poster'] = info['thumb']
-            else:
+            if self.checkCrop(info):
                 info['poster'] = info['thumb'].cropLeft()
+            else:
+                info['poster'] = info['thumb']
 
             #print('scrapy set movie info')
             self.infoView.setMovieInfo(info, False)

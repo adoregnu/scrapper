@@ -14,7 +14,12 @@ ACTOR_MAP = {
     'Ririko Shiina' : 'Kanon Tachibana',
     'Satomi Sugihara' : 'Kanon Tachibana',
     'Yuna Shiina' : 'Yuna Shina',
-    'Sari Kousaka' : 'Sari Kosaka'
+    'Sari Kousaka' : 'Sari Kosaka',
+    'Momose Yurina' :  'Yua Kuramochi',
+    'Yuino' :  'Yua Kuramochi',
+    'Rui Aya' : 'Satsuki',
+    'Yuri Asada' : 'Yuri Fukada',
+    'Emi Hoshii' : 'Emily Morohoshi'
 }
 
 def adjust_actor(name):

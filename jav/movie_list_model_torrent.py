@@ -33,16 +33,18 @@ class FilterProxyModel(QSortFilterProxyModel):
         return len(glob.glob('%s/*.torrent'%(path))) > 0
 
     def startDownload(self, index):
-        from qbittorrent import Client
-        qb = Client(self.config['url'])
-        qb.login(self.config['id'], self.config['password'])
+        import shutil
+        #from qbittorrent import Client
+        #qb = Client(self.config['url'])
+        #qb.login(self.config['id'], self.config['password'])
         try:
             fileInfo = self.sourceModel().fileInfo(index)
             path = fileInfo.absoluteFilePath()
             torrents = glob.glob('%s/*.torrent'%path)
             for t in torrents:
-                with open(t, 'rb') as f:
-                    qb.download_from_file(f)
+                shutil.copy(t, 'z:\\Downloads')
+                #with open(t, 'rb') as f:
+                #    qb.download_from_file(f)
                 open('%s/.skip'%path, 'a').close()
         except Exception as e:
             print(e)

@@ -149,8 +149,9 @@ class ScrapperGui(QMainWindow):
         filemenu.addAction(action)
 
 if __name__ == '__main__':
-    QApplication.setAttribute(Qt.AA_EnableHighDpiScaling, True)
-    QApplication.setAttribute(Qt.AA_UseHighDpiPixmaps, True)
+    os.environ["QT_SCREEN_SCALE_FACTORS"] = "2"
+    #QApplication.setAttribute(Qt.AA_EnableHighDpiScaling, True)
+    #QApplication.setAttribute(Qt.AA_UseHighDpiPixmaps, True)
     app = QApplication(sys.argv)
     import qt5reactor
     qt5reactor.install()

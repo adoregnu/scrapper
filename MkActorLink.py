@@ -84,7 +84,7 @@ def IterateEachDrive(javd, argv):
 
 
 JavDrives = [
-    r'd:\Entertain\JAV',
+    r'd:\JAV',
     r'e:\JAV',
     r'f:\JAV',
     r'g:\JAV',

@@ -12,9 +12,9 @@ class JavBus(scrapy.Spider, Common):
 
     def start_requests(self):
         url = 'https://www.javbus.com/ja/uncensored/search/%s&type=1'
-        kws = self.prepare_request()
-        for k in kws:
-            yield scrapy.Request(url=url % k, callback=self.parse_search)
+        for id in self.cids:
+            yield scrapy.Request(url='%s%s'%(url, id['cid']), callback=self.parse_search, meta={'id':id})
+
 
     def parse_search(self, response):
         self.save_html(response.body)

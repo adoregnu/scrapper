@@ -30,14 +30,19 @@ class SpiderAvwiki(scrapy.Spider, Common):
         href = None
         for link in response.css('h2.archive-header-title > a::attr(href)').extract():
             self.log(link)
-            if '/av-actress/' not in link:
-                href = link
-                break
+            if link  ==  'https://shecool.net/av-wiki/': continue
+            if '/av-actress/' in link: continue
+
+            href = link
+            break
+
         if not href: return
         yield scrapy.Request(url=href, callback=self.parse_real_result, meta=response.meta)
 
     def parser1(self, content):
         link = content.css('div.item-header1 > p > a::attr(href)').extract_first()
+        if not link:
+            link = content.css('div.item-header > p > a::attr(href)').extract_first()
         actor = content.css('div.s-contents > p *::text').extract()[1]
         self.log('actor:{}, link:{}'.format(actor, link))
         return link, actor
@@ -64,7 +69,7 @@ class SpiderAvwiki(scrapy.Spider, Common):
 
         if not link:
             self.log('could not parse html!')
-            #self.save_html(response.body, 'avwiki-real')
+            self.save_html(response.body, 'avwiki-real')
             return
 
         #process link
@@ -79,13 +84,14 @@ class SpiderAvwiki(scrapy.Spider, Common):
 
         #process actor
         if not actor or actor == '＊＊＊': return
-        dmm_search_url = 'https://www.dmm.co.jp/search/=/searchstr=%s 単体' % actor
-        yield scrapy.Request(
-            url = dmm_search_url,
-            callback = self.parse_dmm_cid_list,
-            cookies = self.cookies['www.dmm.co.jp'],
-            meta = {'item':item, 'id':id}
-        )
+        for act in actor.split('　'):
+            dmm_search_url = 'https://www.dmm.co.jp/search/=/searchstr=%s 単体' % act
+            yield scrapy.Request(
+                url = dmm_search_url,
+                callback = self.parse_dmm_cid_list,
+                cookies = self.cookies['www.dmm.co.jp'],
+                meta = {'item':item, 'id':id}
+            )
 
     def parse_movie_info(self, response):
         from scrapy.loader import ItemLoader

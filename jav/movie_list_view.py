@@ -3,7 +3,7 @@ from PyQt5.QtCore import Qt, pyqtSignal, QModelIndex
 from PyQt5.QtWidgets import QListView, QAbstractItemView, QMenu
 
 class MovieListView(QListView):
-    movieDoubleClicked = pyqtSignal(QModelIndex)
+    movieDoubleClicked = pyqtSignal(QModelIndex, bool)
     def __init__(self, config, model, parent = None):
         super().__init__(parent)
         self.numItems = 0
@@ -18,6 +18,7 @@ class MovieListView(QListView):
         self.listModeIndex = -1
         self.switchModel()
         self.doubleClicked.connect(self.onDoubleClicked)
+        self.clicked.connect(self.onClicked)
         self.setContextMenuPolicy(Qt.CustomContextMenu)
         self.customContextMenuRequested.connect(self.onContextMenu)
 
@@ -65,10 +66,14 @@ class MovieListView(QListView):
         self.setModel(self.proxy)
         self.updateRoot()
 
+    def onClicked(self, index):
+        srcIndex = self.proxy.mapToSource(index)
+        self.movieDoubleClicked.emit(srcIndex, False)
+
     def onDoubleClicked(self, index):
         srcIndex = self.proxy.mapToSource(index)
         if self.listModeIndex == 0:
-            self.movieDoubleClicked.emit(srcIndex)
+            self.movieDoubleClicked.emit(srcIndex, True)
         else:
             self.proxy.startDownload(srcIndex)
             self.refresh()
@@ -81,7 +86,11 @@ class MovieListView(QListView):
     def updateRoot(self, path = None):
         if not path:
             path = self.model.rootPath()
-        self.setRootIndex(self.proxy.mapFromSource(self.model.index(path)))
+        index = self.proxy.mapFromSource(self.model.index(path))
+        self.setRootIndex(index)
+        numMovie = self.proxy.rowCount(index)
+        if numMovie > 0:
+            self.parent().parent().setTabText(0, 'List (%d)' % numMovie)
 
     def refresh(self):
         self.proxy.invalidate()

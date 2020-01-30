@@ -52,11 +52,17 @@ class MovieListDelegate(QStyledItemDelegate):
         rsize = lsize * pr
 
         qimage = None
+        subext = ['srt', 'smi', 'ass', 'sub', 'sup']
+        title = index.data(Qt.DisplayRole)
+        sub = False
         for file in files:
-            if '-poster.' in file:
+            if not sub and file[-3:].lower() in subext:
+                title += '(%s)' % file[-3:]
+                sub = True
+            elif not qimage and '-poster.' in file:
                 qimage = QImage('%s/%s'%(filepath, file)).scaled(rsize,
                     Qt.KeepAspectRatio, transformMode=Qt.SmoothTransformation)
-                break
+               
         if not qimage: return
 
         lImgHeight = int(qimage.height() / pr)
@@ -70,7 +76,7 @@ class MovieListDelegate(QStyledItemDelegate):
 
         QPainter.drawPixmap(imgrect, pixmap)
         txtrect = QRect(rect.left(), rect.top() + (ITEM_HEIGHT - 20), ITEM_WIDTH, 20)
-        QPainter.drawText(txtrect, Qt.AlignCenter, os.path.basename(index.data(Qt.DisplayRole)))
+        QPainter.drawText(txtrect, Qt.AlignCenter, os.path.basename(title))
 
         if QStyleOptionViewItem.state & QStyle.State_Selected:
             highlight_color = QStyleOptionViewItem.palette.highlight().color()
