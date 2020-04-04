@@ -10,6 +10,9 @@ def log(msg):
 
 class PipelineTorrent(FilesPipeline):
     def get_media_requests(self, item, info):
+        if 'file_urls' not in item:
+            return
+
         for i, file_url in enumerate(item['file_urls']):
             url = '%s%s' % (info.spider.url, file_url)
             #log(url)

@@ -33,7 +33,6 @@ class CoverWidget(QWidget):
         self.setLayout(layout)
 
     def draw(self):
-        self._label.clear()
         pr = QWindow().devicePixelRatio()
         size = QSize(self._label.width(), self._label.height()) * pr
  
@@ -41,6 +40,7 @@ class CoverWidget(QWidget):
         pixmap = QPixmap.fromImage(qim)
         pixmap.setDevicePixelRatio(pr)
         pixmap = pixmap.scaled(size, Qt.KeepAspectRatio, transformMode=Qt.SmoothTransformation)
+        self._label.clear()
         self._label.setPixmap(pixmap)
 
     def image(self):
@@ -62,7 +62,10 @@ class CoverWidget(QWidget):
         else:
             print('unknown format')
             return
-        self.draw()
+        try:
+            self.draw()
+        except Exception as e:
+            print(e)
 
     def onClickRotate(self):
         #print('onClickRotate')
